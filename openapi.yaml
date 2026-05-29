@@ -1,0 +1,472 @@
+openapi: 3.1.0
+info:
+  title: FlowBridge API
+  version: 1.0.0
+  summary: Reliable webhook automation platform API.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://api.flowbridge.dev
+security:
+  - bearerAuth: []
+paths:
+  /up:
+    get:
+      operationId: healthCheck
+      security: []
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is alive
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          description: Service failed to boot
+  /ready:
+    get:
+      operationId: readinessCheck
+      security: []
+      summary: Readiness check
+      responses:
+        "200":
+          description: Service dependencies are ready
+        "400":
+          $ref: "#/components/responses/Error"
+        "503":
+          description: Dependency failure
+  /metrics:
+    get:
+      operationId: prometheusMetrics
+      security: []
+      summary: Prometheus metrics
+      responses:
+        "200":
+          description: Prometheus text metrics
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          description: Metrics could not be collected
+  /api/v1/organizations:
+    post:
+      operationId: createOrganization
+      security: []
+      summary: Create an organization and owner API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationRequest"
+      responses:
+        "201":
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateOrganizationResponse"
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/v1/organizations/{id}:
+    get:
+      operationId: showOrganization
+      summary: Show current organization
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Organization
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v1/workflows:
+    get:
+      operationId: listWorkflows
+      summary: List workflows
+      responses:
+        "200":
+          description: Workflows
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createWorkflow
+      summary: Create workflow metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkflowRequest"
+      responses:
+        "201":
+          description: Workflow created
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v1/workflows/{id}:
+    get:
+      operationId: showWorkflow
+      summary: Show workflow with versions
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Workflow
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/workflows/{workflow_id}/versions:
+    get:
+      operationId: listWorkflowVersions
+      summary: List workflow versions
+      parameters:
+        - $ref: "#/components/parameters/WorkflowId"
+      responses:
+        "200":
+          description: Workflow versions
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: publishWorkflowVersion
+      summary: Publish immutable workflow version
+      parameters:
+        - $ref: "#/components/parameters/WorkflowId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishWorkflowVersionRequest"
+      responses:
+        "201":
+          description: Workflow version published
+        "422":
+          $ref: "#/components/responses/Error"
+  /api/v1/webhooks/{trigger_key}:
+    post:
+      operationId: ingestWebhook
+      security: []
+      summary: Ingest signed webhook
+      parameters:
+        - name: trigger_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-FlowBridge-Event-Id
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: X-FlowBridge-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-Id
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Webhook accepted
+        "401":
+          $ref: "#/components/responses/Error"
+  /api/v1/executions:
+    get:
+      operationId: listExecutions
+      summary: List workflow executions
+      responses:
+        "200":
+          description: Executions
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v1/executions/{id}:
+    get:
+      operationId: showExecution
+      summary: Show workflow execution with nodes
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Execution
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/executions/{id}/retry:
+    post:
+      operationId: retryExecution
+      summary: Manually retry failed execution
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "202":
+          description: Retry queued
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v1/dead_letters:
+    get:
+      operationId: listDeadLetters
+      summary: List dead letters
+      responses:
+        "200":
+          description: Dead letters
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v1/dead_letters/{id}:
+    get:
+      operationId: showDeadLetter
+      summary: Show dead letter
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Dead letter
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/dead_letters/{id}/retry:
+    post:
+      operationId: retryDeadLetter
+      summary: Retry dead-lettered execution
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "202":
+          description: Retry queued
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/dead_letters/{id}/resolve:
+    post:
+      operationId: resolveDeadLetter
+      summary: Resolve dead letter
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Dead letter resolved
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/credentials:
+    get:
+      operationId: listCredentials
+      summary: List credential metadata
+      responses:
+        "200":
+          description: Credentials
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createCredential
+      summary: Create encrypted credential
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCredentialRequest"
+      responses:
+        "201":
+          description: Credential created
+        "422":
+          $ref: "#/components/responses/Error"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: FlowBridge API key
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    WorkflowId:
+      name: workflow_id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    Error:
+      description: Standard error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    CreateOrganizationRequest:
+      type: object
+      required:
+        - organization
+      properties:
+        organization:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+            slug:
+              type: string
+            plan:
+              type: string
+              enum: [launch, scale, enterprise]
+            rate_limit_per_minute:
+              type: integer
+              minimum: 1
+    CreateOrganizationResponse:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/Organization"
+        api_key:
+          allOf:
+            - $ref: "#/components/schemas/ApiKey"
+            - type: object
+              properties:
+                token:
+                  type: string
+    CreateWorkflowRequest:
+      type: object
+      required:
+        - workflow
+      properties:
+        workflow:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+            slug:
+              type: string
+            description:
+              type: string
+    PublishWorkflowVersionRequest:
+      type: object
+      required:
+        - workflow_version
+      properties:
+        workflow_version:
+          type: object
+          required:
+            - graph
+          properties:
+            retry_policy:
+              type: object
+              properties:
+                max_attempts:
+                  type: integer
+                base_delay_seconds:
+                  type: integer
+                jitter_seconds:
+                  type: integer
+            graph:
+              type: object
+              required:
+                - nodes
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/WorkflowNode"
+    CreateCredentialRequest:
+      type: object
+      required:
+        - credential
+      properties:
+        credential:
+          type: object
+          required:
+            - name
+            - kind
+            - secret
+          properties:
+            name:
+              type: string
+            kind:
+              type: string
+              enum: [api_key, bearer_token, basic_auth, webhook_secret]
+            secret:
+              type: string
+            metadata_json:
+              type: object
+              additionalProperties: true
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        plan:
+          type: string
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        token_hint:
+          type: string
+    WorkflowNode:
+      type: object
+      required:
+        - key
+        - type
+      properties:
+        key:
+          type: string
+        type:
+          type: string
+          enum: [webhook_trigger, transform, filter, http_request, emit_event]
+        config:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - request_id
+            - correlation_id
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            request_id:
+              type: string
+            correlation_id:
+              type: string
