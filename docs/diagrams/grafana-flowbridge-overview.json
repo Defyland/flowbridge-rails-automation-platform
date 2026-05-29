@@ -1,0 +1,35 @@
+{
+  "title": "FlowBridge Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Open dead letters",
+      "targets": [
+        {
+          "expr": "flowbridge_dead_letters_open"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Workflow executions by status",
+      "targets": [
+        {
+          "expr": "sum by (status) (flowbridge_workflow_executions_total)"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Webhook events by status",
+      "targets": [
+        {
+          "expr": "sum by (status) (flowbridge_webhook_events_total)"
+        }
+      ]
+    }
+  ]
+}
