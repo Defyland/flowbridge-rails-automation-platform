@@ -1,0 +1,33 @@
+<header class="page-header">
+  <div>
+    <h1>Executions</h1>
+    <p>Most recent workflow runs with correlation and retry state.</p>
+  </div>
+</header>
+
+<section class="panel">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Workflow</th>
+        <th>Status</th>
+        <th>Attempt</th>
+        <th>Correlation</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @executions.each do |execution| %>
+        <tr>
+          <td><%= link_to execution.id, operator_execution_path(execution) %></td>
+          <td><%= execution.workflow.name %></td>
+          <td><%= status_badge(execution.status) %></td>
+          <td><%= execution.attempt_count %></td>
+          <td><%= execution.correlation_id %></td>
+          <td><%= compact_time(execution.created_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

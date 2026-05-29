@@ -1,0 +1,33 @@
+<header class="page-header">
+  <div>
+    <h1>Dead letters</h1>
+    <p>Terminal workflow failures that need operator review.</p>
+  </div>
+</header>
+
+<section class="panel">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Workflow</th>
+        <th>Reason</th>
+        <th>Status</th>
+        <th>Retries</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @dead_letters.each do |dead_letter| %>
+        <tr>
+          <td><%= link_to dead_letter.id, operator_dead_letter_path(dead_letter) %></td>
+          <td><%= dead_letter.workflow_execution.workflow.name %></td>
+          <td><%= dead_letter.reason %></td>
+          <td><%= status_badge(dead_letter.status) %></td>
+          <td><%= dead_letter.retry_count %></td>
+          <td><%= compact_time(dead_letter.created_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

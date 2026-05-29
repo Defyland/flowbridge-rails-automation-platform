@@ -1,0 +1,80 @@
+<header class="page-header">
+  <div>
+    <h1>Execution <%= @execution.id %></h1>
+    <p><%= @execution.workflow.name %> v<%= @execution.workflow_version.version_number %></p>
+  </div>
+  <% if %w[failed retrying].include?(@execution.status) %>
+    <%= button_to "Retry", retry_operator_execution_path(@execution), method: :post, class: "button" %>
+  <% end %>
+</header>
+
+<section class="grid grid--two">
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Node evidence</h2>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Node</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Attempt</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @execution.node_executions.order(:created_at, :id).each do |node| %>
+          <tr>
+            <td><%= node.node_key %></td>
+            <td><%= node.node_type %></td>
+            <td><%= status_badge(node.status) %></td>
+            <td><%= node.attempt %></td>
+            <td><%= node.duration_ms || "-" %> ms</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stack">
+    <div class="panel">
+      <div class="panel__header">
+        <h2>Execution metadata</h2>
+      </div>
+      <div class="panel__body">
+        <dl class="kv">
+          <div>
+            <dt>Status</dt>
+            <dd><%= status_badge(@execution.status) %></dd>
+          </div>
+          <div>
+            <dt>Idempotency</dt>
+            <dd><%= @execution.idempotency_key %></dd>
+          </div>
+          <div>
+            <dt>Correlation</dt>
+            <dd><%= @execution.correlation_id %></dd>
+          </div>
+          <div>
+            <dt>Started</dt>
+            <dd><%= compact_time(@execution.started_at) %></dd>
+          </div>
+          <div>
+            <dt>Completed</dt>
+            <dd><%= compact_time(@execution.completed_at) %></dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <% if @execution.error_json.present? %>
+      <div class="panel">
+        <div class="panel__header">
+          <h2>Error</h2>
+        </div>
+        <pre class="code"><%= JSON.pretty_generate(@execution.error_json) %></pre>
+      </div>
+    <% end %>
+  </div>
+</section>

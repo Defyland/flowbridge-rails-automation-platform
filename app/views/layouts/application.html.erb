@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>FlowBridge</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <div class="shell">
+      <% if authenticated? %>
+        <aside class="sidebar">
+          <%= link_to "FlowBridge", root_path, class: "brand" %>
+          <nav class="nav">
+            <%= link_to "Overview", root_path %>
+            <%= link_to "Workflows", operator_workflows_path %>
+            <%= link_to "Executions", operator_executions_path %>
+            <%= link_to "Dead letters", operator_dead_letters_path %>
+          </nav>
+          <div class="sidebar__footer">
+            <p><%= current_organization&.name || "No organization" %></p>
+            <%= button_to "Sign out", session_path, method: :delete, class: "link-button" %>
+          </div>
+        </aside>
+      <% end %>
+
+      <main class="main">
+        <% if notice.present? %>
+          <div class="flash flash--notice"><%= notice %></div>
+        <% end %>
+        <% if alert.present? %>
+          <div class="flash flash--alert"><%= alert %></div>
+        <% end %>
+
+        <%= yield %>
+      </main>
+    </div>
+  </body>
+</html>

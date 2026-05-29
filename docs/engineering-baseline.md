@@ -1,26 +1,27 @@
 # FlowBridge Engineering Baseline
 
-This repository follows the initiative-wide standards below.
+FlowBridge now implements the initiative baseline beyond phase 0. The repository contains a runnable Rails API, product documentation, OpenAPI contract, tests, CI, security controls, observability endpoints, and benchmark scripts.
 
-## Mandatory outcomes
+## Implemented outcomes
 
-- product-grade `README.md` with product and engineering sections
-- `openapi.yaml` once the HTTP surface exists
-- `docs/adr/`, `docs/architecture/`, `docs/benchmarks/`, `docs/api/`, `docs/diagrams/`, and `docs/runbooks/`
-- atomic Conventional Commit history
-- GitHub Actions for lint, tests, security, build, coverage, and OpenAPI validation
-- observability with structured logs, metrics, traces, request IDs, and readiness endpoints
-- documented k6 performance baselines
+- Product-grade README with all required sections.
+- Rails hybrid monolith with versioned `/api/v1` endpoints and an authenticated operator console.
+- `openapi.yaml` contract.
+- Mandatory docs folders: `docs/adr`, `docs/architecture`, `docs/benchmarks`, `docs/api`, `docs/diagrams`, and `docs/runbooks`.
+- Multi-tenant domain model with API key roles and operator memberships.
+- Immutable workflow versions and graph checksums.
+- Signed webhook ingestion with idempotency.
+- Async execution job with Solid Queue transport, retry, and dead-letter semantics.
+- Encrypted credential storage and secret masking.
+- Structured logs, request IDs, correlation IDs, readiness, liveness, metrics, Solid Cache, Solid Cable, and OpenTelemetry hooks.
+- Minitest coverage across models, services, jobs, request flows, and Capybara system tests.
+- GitHub Actions for PostgreSQL-backed tests, system tests, lint, security, Docker build, OpenAPI validation, and coverage artifact upload.
+- k6 scripts for smoke, load, stress, and spike tests.
 
-## FlowBridge-specific emphasis
+## Remaining production hardening
 
-- immutable workflow versions as the only executable workflow shape
-- webhook event idempotency keyed by workflow and source identity
-- async execution pipeline with retry, jittered backoff, and dead-letter semantics
-- masked credential storage and secret-safe execution logs
-- node-level execution evidence with durations, inputs, outputs, and failures
-- replay-safe operational tooling for dead letters and manual retries
-
-## Phase 0 boundary
-
-This repository intentionally stops before scaffolding Rails, execution workers, credential vaulting, or workflow graph code. The goal of this phase is only to lock scope and standards.
+- Tune Solid Queue worker concurrency and queue names from production load data.
+- Split web and worker runtimes if `SOLID_QUEUE_IN_PUMA` stops matching production traffic.
+- Add RabbitMQ adapter for broker-native retry queues and DLQs.
+- Add OAuth connector credential rotation.
+- Add a graph editor UI.

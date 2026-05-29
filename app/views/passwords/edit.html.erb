@@ -1,0 +1,17 @@
+<div class="auth">
+  <section class="auth-card">
+    <h1>Update password</h1>
+
+    <%= form_with url: password_path(params[:token]), method: :put do |form| %>
+      <div class="field">
+        <%= form.label :password, "New password" %>
+        <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72 %>
+      </div>
+      <div class="field">
+        <%= form.label :password_confirmation, "Confirm password" %>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72 %>
+      </div>
+      <%= form.submit "Save", class: "button" %>
+    <% end %>
+  </section>
+</div>

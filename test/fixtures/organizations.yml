@@ -1,0 +1,6 @@
+flowbridge:
+  name: FlowBridge Test Ops
+  slug: flowbridge-test-ops
+  plan: launch
+  rate_limit_per_minute: 120
+  metadata_json: {}

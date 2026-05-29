@@ -1,0 +1,29 @@
+<header class="page-header">
+  <div>
+    <h1>Workflows</h1>
+    <p>Published automation definitions and execution volume.</p>
+  </div>
+</header>
+
+<section class="panel">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Versions</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @workflows.each do |workflow| %>
+        <tr>
+          <td><%= link_to workflow.name, operator_workflow_path(workflow) %></td>
+          <td><%= status_badge(workflow.status) %></td>
+          <td><%= workflow.workflow_versions.size %></td>
+          <td><%= compact_time(workflow.updated_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
