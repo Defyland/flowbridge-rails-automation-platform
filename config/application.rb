@@ -39,6 +39,7 @@ module FlowbridgeRailsAutomationPlatform
     config.api_only = false
 
     config.active_job.queue_adapter = ENV.fetch("ACTIVE_JOB_ADAPTER", "solid_queue").to_sym
+    config.active_storage.variant_processor = :disabled
     config.time_zone = "UTC"
     config.active_record.schema_format = :ruby
   end
