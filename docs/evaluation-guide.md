@@ -54,7 +54,7 @@ This guide is written for a reviewer evaluating FlowBridge as a senior Ruby on R
 - `/up`, `/ready`, and `/metrics` provide health, readiness, and Prometheus-style observability.
 - Structured JSON logging carries request and correlation identifiers.
 - OpenTelemetry instrumentation can be enabled without changing application code.
-- Kamal and Thruster configuration show a credible deployment path.
+- Kamal, Thruster, and the manual GitHub Actions deploy workflow show a credible deployment path.
 - Runbooks document common failure modes such as invalid signatures, stuck retries, and open dead letters.
 - Benchmarks include smoke, load, stress, and spike scenarios with documented methodology.
 

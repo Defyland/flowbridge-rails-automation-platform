@@ -189,6 +189,35 @@ The CI entrypoint is:
 bin/ci
 ```
 
+## CI/CD
+
+GitHub Actions runs the production-readiness checks on pull requests and pushes to `main`:
+
+- PostgreSQL-backed Rails tests and Capybara system tests
+- RuboCop Rails Omakase
+- Brakeman
+- bundler-audit
+- Redocly OpenAPI linting
+- Docker image build
+
+Deployment is manual through the `Deploy` workflow. It uses Kamal and requires a protected `production` environment with these repository variables:
+
+- `APP_HOST`
+- `KAMAL_IMAGE`
+- `KAMAL_REGISTRY_USERNAME`
+- `KAMAL_WEB_HOST`
+
+And these repository secrets:
+
+- `KAMAL_SSH_PRIVATE_KEY`
+- `KAMAL_REGISTRY_PASSWORD`
+- `RAILS_MASTER_KEY`
+- `SECRET_KEY_BASE`
+- `DATABASE_URL`
+- `QUEUE_DATABASE_URL`
+- `CACHE_DATABASE_URL`
+- `CABLE_DATABASE_URL`
+
 ## Failure scenarios
 
 - Invalid API key returns `401 unauthorized`.

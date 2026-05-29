@@ -1,24 +1,31 @@
+<%
+  def deploy_env(name, fallback = nil)
+    value = ENV[name]
+    value.nil? || value.empty? ? fallback : value
+  end
+%>
+
 service: flowbridge
-image: flowbridge/automation-platform
+image: <%= deploy_env("KAMAL_IMAGE", "flowbridge/automation-platform") %>
 
 servers:
   web:
-    - 203.0.113.10
+    - <%= deploy_env("KAMAL_WEB_HOST", "203.0.113.10") %>
 
 proxy:
   ssl: true
-  host: flowbridge.example.com
+  host: <%= deploy_env("APP_HOST", "flowbridge.example.com") %>
   app_port: 3000
 
 registry:
-  username: flowbridge
+  username: <%= deploy_env("KAMAL_REGISTRY_USERNAME", "flowbridge") %>
   password:
     - KAMAL_REGISTRY_PASSWORD
 
 env:
   clear:
     RAILS_LOG_LEVEL: info
-    APP_HOST: flowbridge.example.com
+    APP_HOST: <%= deploy_env("APP_HOST", "flowbridge.example.com") %>
     SOLID_QUEUE_IN_PUMA: true
   secret:
     - RAILS_MASTER_KEY

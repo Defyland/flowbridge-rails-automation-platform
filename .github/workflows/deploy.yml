@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      APP_HOST: ${{ vars.APP_HOST }}
+      KAMAL_IMAGE: ${{ vars.KAMAL_IMAGE }}
+      KAMAL_REGISTRY_USERNAME: ${{ vars.KAMAL_REGISTRY_USERNAME }}
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_WEB_HOST: ${{ vars.KAMAL_WEB_HOST }}
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      QUEUE_DATABASE_URL: ${{ secrets.QUEUE_DATABASE_URL }}
+      CACHE_DATABASE_URL: ${{ secrets.CACHE_DATABASE_URL }}
+      CABLE_DATABASE_URL: ${{ secrets.CABLE_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
+
+      - name: Verify deployment configuration
+        run: |
+          required=(
+            APP_HOST
+            KAMAL_IMAGE
+            KAMAL_REGISTRY_USERNAME
+            KAMAL_REGISTRY_PASSWORD
+            KAMAL_WEB_HOST
+            RAILS_MASTER_KEY
+            SECRET_KEY_BASE
+            DATABASE_URL
+            QUEUE_DATABASE_URL
+            CACHE_DATABASE_URL
+            CABLE_DATABASE_URL
+          )
+
+          missing=()
+          for name in "${required[@]}"; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf 'Missing deployment configuration: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
+      - name: Deploy with Kamal
+        run: bundle exec kamal deploy
