@@ -92,7 +92,7 @@ All product endpoints are versioned under `/api/v1`. Webhook ingress uses `/api/
 
 ## Async or event architecture
 
-Webhook ingestion persists the event and execution in one database transaction, then enqueues `WorkflowExecutionJob`. The job executes the immutable workflow version node by node. Retriable failures schedule another job according to the version retry policy. Exhausted or non-retriable failures create a `DeadLetter` record. This is documented in [docs/architecture/data-consistency.md](docs/architecture/data-consistency.md).
+Webhook ingestion persists the event and execution in one database transaction, then enqueues `WorkflowExecutionJob`. The job executes the immutable workflow version node by node. Retriable failures schedule another job according to the version retry policy. Exhausted or non-retriable failures create a `DeadLetter` record. This is documented in [docs/architecture/data-consistency.md](docs/architecture/data-consistency.md) and [docs/architecture/workflow-engine.md](docs/architecture/workflow-engine.md), with event contracts in [docs/events/README.md](docs/events/README.md).
 
 ## Database design
 
@@ -138,7 +138,7 @@ FlowBridge exposes:
 
 ## Security considerations
 
-Security controls include bearer API key digests, role-based authorization, tenant-scoped queries, encrypted credential material, webhook HMAC signatures, idempotency keys, secret masking, rate limiting, audit logs, environment-based secret management, Brakeman, and bundler-audit. See [docs/security/threat-model.md](docs/security/threat-model.md) and [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md).
+Security controls include bearer API key digests, role-based authorization, tenant-scoped queries, encrypted credential material, webhook HMAC signatures, idempotency keys, secret masking, rate limiting, audit logs, environment-based secret management, Brakeman, and bundler-audit. See [docs/security/threat-model.md](docs/security/threat-model.md), [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md), and [docs/architecture/deployment-readiness.md](docs/architecture/deployment-readiness.md).
 
 ## Trade-offs and decisions
 
@@ -147,6 +147,7 @@ Key decisions are captured as ADRs:
 - [ADR 001: PostgreSQL-backed hybrid Rails monolith](docs/adr/001-postgresql-hybrid-rails-monolith.md)
 - [ADR 002: Immutable workflow versions](docs/adr/002-immutable-workflow-versions.md)
 - [ADR 003: Database-backed dead letters before external broker adoption](docs/adr/003-database-backed-dead-letters.md)
+- [ADR 004: Defer Event Sourcing for execution history](docs/adr/004-defer-event-sourcing-for-execution-history.md)
 
 The main trade-off is using Active Job and database state instead of RabbitMQ in this implementation slice. The design still models retry queues, idempotency, acknowledgement boundaries, and dead letters explicitly, while keeping the project runnable without external services.
 

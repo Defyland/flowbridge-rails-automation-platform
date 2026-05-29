@@ -32,8 +32,97 @@
 | Workflow mutation during replay | immutable workflow versions |
 | Retry storm | retry policy with max attempts and dead letters |
 
+## Focused workflow-engine threats
+
+### Webhook spoofing
+
+Risk: an attacker posts a fake event to a known trigger URL to create executions or exfiltrate behavior through node outputs.
+
+Controls:
+
+- verify HMAC SHA-256 before creating `WebhookEvent` or `WorkflowExecution`
+- use per-version webhook secrets instead of shared global secrets
+- scope trigger keys to immutable workflow versions
+- reject unknown trigger keys with generic responses
+- store sanitized headers only
+
+Residual risk:
+
+- source systems with weak signing practices still require source-specific adapters before production onboarding
+
+### Token leakage
+
+Risk: API keys, reset tokens, or deployment secrets leak through logs, exceptions, CI output, audit metadata, or browser-visible payloads.
+
+Controls:
+
+- store API keys as digests and return raw tokens only once
+- filter sensitive params through Rails parameter filtering
+- keep Kamal and database credentials in GitHub secrets, not repository files
+- keep API authentication separate from browser session authentication
+- role-scope API keys to owner/operator/viewer permissions
+
+Residual risk:
+
+- leaked one-time API tokens cannot be recovered from storage, but they still require revocation and rotation if copied by the receiver
+
+### Manual replay abuse
+
+Risk: an operator retries a dead letter or execution repeatedly, causing duplicate downstream writes or hiding original failure evidence.
+
+Controls:
+
+- preserve original webhook identity and workflow version during replay
+- append new attempt evidence instead of overwriting old node evidence
+- record replay through audit logs and dead-letter status transitions
+- keep idempotency scoped to `source + source_event_id + workflow_version_id`
+- require operator permissions for retry and resolve actions
+
+Residual risk:
+
+- downstream systems without idempotent APIs may still observe duplicate side effects; connector-specific idempotency keys should be added before real integrations
+
+### Credentials masking
+
+Risk: credentials appear in node inputs, outputs, event payloads, logs, audit metadata, or dead-letter records.
+
+Controls:
+
+- encrypt credential material at rest
+- mask recursive secret-bearing keys before rendering or recording execution evidence
+- avoid copying raw credential values into event payloads
+- treat dead-letter payloads as operator-visible evidence, not a secret vault
+
+Residual risk:
+
+- custom node types must pass a masking review before production use
+
+### Dead-letter queue exposure
+
+Risk: DLQ records become a secondary data leak, replay footgun, or unbounded storage sink.
+
+Controls:
+
+- store reason, execution reference, and masked payload evidence
+- restrict DLQ read/retry/resolve actions by role
+- require explicit resolution rather than silent deletion
+- expose DLQ metrics so growth is visible
+- document DLQ triage in runbooks
+
+Residual risk:
+
+- high-volume poison events can still fill the database; production should add retention and alert thresholds
+
 ## Residual risks
 
 - Local rate limiting uses Rails cache and is not distributed until backed by Redis or another shared cache.
 - Credential rotation workflows are planned but not yet implemented.
 - External HTTP calls are represented by deterministic mock nodes in this implementation slice.
+
+## Transversal architecture additions
+
+- Webhook signatures must be verified before workflow lookup or execution creation.
+- Credential values must never appear in event payloads, execution outputs, audit metadata, or dead-letter records.
+- Replay is an operator action and should preserve original event identity while creating new attempt evidence.
+- Workflow versions are the execution boundary; mutable drafts must never be used by running executions.
+- Dead-letter queues are operational evidence, not a place to hide validation failures.

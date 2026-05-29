@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Defyland/flowbridge-rails-automation-platform/docs/events/workflow_version_event.v1.json",
+  "title": "FlowBridge Workflow Version Event v1",
+  "type": "object",
+  "required": ["event_id", "event_type", "schema_version", "occurred_at", "producer", "organization_id", "workflow_id", "workflow_version_id", "source", "correlation_id", "payload"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_type": { "type": "string", "enum": ["workflow.version.published", "workflow.version.retired"] },
+    "schema_version": { "type": "integer", "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string", "const": "flowbridge" },
+    "organization_id": { "type": "string" },
+    "workflow_id": { "type": "string" },
+    "workflow_version_id": { "type": "string" },
+    "execution_id": { "type": ["string", "null"] },
+    "source": { "type": "string" },
+    "source_event_id": { "type": ["string", "null"] },
+    "correlation_id": { "type": "string" },
+    "payload": {
+      "type": "object",
+      "required": ["version_number", "graph_checksum"],
+      "properties": {
+        "version_number": { "type": "integer", "minimum": 1 },
+        "graph_checksum": { "type": "string" },
+        "trigger_key": { "type": "string" },
+        "published_by": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Defyland/flowbridge-rails-automation-platform/docs/events/workflow_execution_event.v1.json",
+  "title": "FlowBridge Workflow Execution Event v1",
+  "type": "object",
+  "required": ["event_id", "event_type", "schema_version", "occurred_at", "producer", "organization_id", "workflow_id", "workflow_version_id", "execution_id", "source", "correlation_id", "payload"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "event_type": { "type": "string", "enum": ["workflow.execution.started", "workflow.execution.succeeded", "workflow.execution.failed", "workflow.execution.retrying"] },
+    "schema_version": { "type": "integer", "const": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string", "const": "flowbridge" },
+    "organization_id": { "type": "string" },
+    "workflow_id": { "type": "string" },
+    "workflow_version_id": { "type": "string" },
+    "execution_id": { "type": "string" },
+    "source": { "type": "string" },
+    "correlation_id": { "type": "string" },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}
