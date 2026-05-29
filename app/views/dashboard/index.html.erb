@@ -1,0 +1,67 @@
+<header class="page-header">
+  <div>
+    <h1>Operations overview</h1>
+    <p>Tenant execution health for <%= current_organization.name %>.</p>
+  </div>
+</header>
+
+<section class="grid grid--stats">
+  <div class="stat">
+    <span>Workflows</span>
+    <strong><%= @workflow_count %></strong>
+  </div>
+  <div class="stat">
+    <span>Open dead letters</span>
+    <strong><%= @open_dead_letter_count %></strong>
+  </div>
+  <% %w[queued retrying failed succeeded].each do |status| %>
+    <div class="stat">
+      <span><%= status.humanize %></span>
+      <strong><%= @execution_counts.fetch(status, 0) %></strong>
+    </div>
+  <% end %>
+</section>
+
+<section class="grid grid--two" style="margin-top: 1rem;">
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Recent executions</h2>
+      <%= link_to "View all", operator_executions_path %>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Workflow</th>
+          <th>Status</th>
+          <th>Attempt</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_executions.each do |execution| %>
+          <tr>
+            <td><%= link_to execution.workflow.name, operator_execution_path(execution) %></td>
+            <td><%= status_badge(execution.status) %></td>
+            <td><%= execution.attempt_count %></td>
+            <td><%= compact_time(execution.started_at || execution.created_at) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Dead letters</h2>
+      <%= link_to "View all", operator_dead_letters_path %>
+    </div>
+    <div class="panel__body stack">
+      <% @recent_dead_letters.each do |dead_letter| %>
+        <div>
+          <strong><%= link_to dead_letter.reason, operator_dead_letter_path(dead_letter) %></strong>
+          <div><%= status_badge(dead_letter.status) %> <%= dead_letter.workflow_execution.workflow.name %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>

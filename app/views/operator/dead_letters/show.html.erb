@@ -1,0 +1,51 @@
+<header class="page-header">
+  <div>
+    <h1>Dead letter <%= @dead_letter.id %></h1>
+    <p><%= @dead_letter.workflow_execution.workflow.name %> execution <%= @dead_letter.workflow_execution_id %></p>
+  </div>
+  <div>
+    <% if @dead_letter.status == "open" %>
+      <%= button_to "Retry", retry_operator_dead_letter_path(@dead_letter), method: :post, class: "button" %>
+      <%= button_to "Resolve", resolve_operator_dead_letter_path(@dead_letter), method: :post, class: "button button--secondary" %>
+    <% end %>
+  </div>
+</header>
+
+<section class="grid grid--two">
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Failure payload</h2>
+    </div>
+    <pre class="code"><%= JSON.pretty_generate(@dead_letter.payload_json) %></pre>
+  </div>
+
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Review state</h2>
+    </div>
+    <div class="panel__body">
+      <dl class="kv">
+        <div>
+          <dt>Status</dt>
+          <dd><%= status_badge(@dead_letter.status) %></dd>
+        </div>
+        <div>
+          <dt>Reason</dt>
+          <dd><%= @dead_letter.reason %></dd>
+        </div>
+        <div>
+          <dt>Retries</dt>
+          <dd><%= @dead_letter.retry_count %></dd>
+        </div>
+        <div>
+          <dt>Resolved</dt>
+          <dd><%= compact_time(@dead_letter.resolved_at) %></dd>
+        </div>
+        <div>
+          <dt>Execution</dt>
+          <dd><%= link_to @dead_letter.workflow_execution_id, operator_execution_path(@dead_letter.workflow_execution) %></dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</section>

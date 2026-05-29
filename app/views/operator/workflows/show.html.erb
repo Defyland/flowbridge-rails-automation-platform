@@ -1,0 +1,59 @@
+<header class="page-header">
+  <div>
+    <h1><%= @workflow.name %></h1>
+    <p><%= @workflow.description.presence || "No description provided." %></p>
+  </div>
+  <%= status_badge(@workflow.status) %>
+</header>
+
+<section class="grid grid--two">
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Recent executions</h2>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Attempt</th>
+          <th>Correlation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @executions.each do |execution| %>
+          <tr>
+            <td><%= link_to execution.id, operator_execution_path(execution) %></td>
+            <td><%= status_badge(execution.status) %></td>
+            <td><%= execution.attempt_count %></td>
+            <td><%= execution.correlation_id %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel__header">
+      <h2>Versions</h2>
+    </div>
+    <div class="panel__body stack">
+      <% @workflow.workflow_versions.order(version_number: :desc).each do |version| %>
+        <dl class="kv">
+          <div>
+            <dt>Version</dt>
+            <dd><%= version.version_number %></dd>
+          </div>
+          <div>
+            <dt>Trigger</dt>
+            <dd><%= version.trigger_key %></dd>
+          </div>
+          <div>
+            <dt>Checksum</dt>
+            <dd><%= version.graph_checksum %></dd>
+          </div>
+        </dl>
+      <% end %>
+    </div>
+  </div>
+</section>
