@@ -4,7 +4,16 @@ FlowBridge is a hybrid Rails monolith for reliable webhook-driven automation. It
 
 ## Reviewer guide
 
-If you are evaluating this repository as a senior Ruby on Rails or technical leadership portfolio project, start with [docs/evaluation-guide.md](docs/evaluation-guide.md). It explains the fastest validation path and the engineering signals the project is designed to demonstrate.
+If you are evaluating this repository as a senior Ruby on Rails or technical leadership portfolio project, start with [docs/evaluation-guide.md](docs/evaluation-guide.md), [docs/engineering-case-study.md](docs/engineering-case-study.md), and [docs/spec-driven/senior-readiness-spec.md](docs/spec-driven/senior-readiness-spec.md). These documents explain the fastest validation path, the product and architecture reasoning, and the acceptance criteria used to judge senior readiness.
+
+Evidence map:
+
+- Product: [docs/product/problem.md](docs/product/problem.md), [docs/product/personas.md](docs/product/personas.md), [docs/product/use-cases.md](docs/product/use-cases.md), [docs/product/non-goals.md](docs/product/non-goals.md), [docs/product/roadmap.md](docs/product/roadmap.md)
+- Domain: [docs/domain/glossary.md](docs/domain/glossary.md), [docs/domain/bounded-contexts.md](docs/domain/bounded-contexts.md), [docs/domain/aggregates.md](docs/domain/aggregates.md), [docs/domain/invariants.md](docs/domain/invariants.md), [docs/domain/state-machines.md](docs/domain/state-machines.md)
+- Architecture: [docs/architecture/overview.md](docs/architecture/overview.md), [docs/architecture/module-boundaries.md](docs/architecture/module-boundaries.md), [docs/architecture/sequence-diagrams.md](docs/architecture/sequence-diagrams.md), [docs/architecture/deployment-view.md](docs/architecture/deployment-view.md)
+- Operations and scale: [docs/scalability.md](docs/scalability.md), [docs/operational-cost.md](docs/operational-cost.md), [docs/runbooks/common-issues.md](docs/runbooks/common-issues.md)
+- Observability and tests: [docs/observability.md](docs/observability.md), [docs/testing-strategy.md](docs/testing-strategy.md), [docs/spec-driven/verification-report.md](docs/spec-driven/verification-report.md)
+- Security: [docs/security/threat-model.md](docs/security/threat-model.md), [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md), [docs/security/data-classification.md](docs/security/data-classification.md), [docs/security/secrets.md](docs/security/secrets.md), [docs/security/abuse-cases.md](docs/security/abuse-cases.md)
 
 ## What is this product?
 
@@ -122,7 +131,7 @@ bin/rails test:all
 
 ## Performance benchmarks
 
-k6 scripts live in [benchmarks/](benchmarks/). The documented local baseline is [benchmarks/baseline.md](benchmarks/baseline.md), with methodology in [docs/benchmarks/methodology.md](docs/benchmarks/methodology.md). Benchmark scenarios include smoke, load, stress, and spike tests.
+k6 scripts live in [benchmarks/](benchmarks/). The documented local baseline is [benchmarks/baseline.md](benchmarks/baseline.md), with methodology in [docs/benchmarks/methodology.md](docs/benchmarks/methodology.md). Benchmark scenarios include smoke, load, stress, and spike tests. The current baseline is honest about a remaining evidence gap: scripts and budgets exist, but measured p50/p95/p99 results still need to be captured against a long-lived app server.
 
 ## Observability
 
@@ -138,7 +147,7 @@ FlowBridge exposes:
 
 ## Security considerations
 
-Security controls include bearer API key digests, role-based authorization, tenant-scoped queries, encrypted credential material, webhook HMAC signatures, idempotency keys, secret masking, rate limiting, audit logs, environment-based secret management, Brakeman, and bundler-audit. See [docs/security/threat-model.md](docs/security/threat-model.md), [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md), and [docs/architecture/deployment-readiness.md](docs/architecture/deployment-readiness.md).
+Security controls include bearer API key digests, role-based authorization, tenant-scoped queries, encrypted credential material, webhook HMAC signatures, idempotency keys, secret masking, rate limiting, audit logs, environment-based secret management, Brakeman, and bundler-audit. See [docs/security/threat-model.md](docs/security/threat-model.md), [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md), [docs/security/data-classification.md](docs/security/data-classification.md), [docs/security/secrets.md](docs/security/secrets.md), [docs/security/abuse-cases.md](docs/security/abuse-cases.md), and [docs/architecture/deployment-readiness.md](docs/architecture/deployment-readiness.md).
 
 ## Trade-offs and decisions
 
