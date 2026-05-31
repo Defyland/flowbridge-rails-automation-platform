@@ -43,9 +43,21 @@ class RateLimitingAndMetricsTest < ActionDispatch::IntegrationTest
       organization: organization,
       workflow: version.workflow,
       status: "failed",
+      attempt_count: 2,
       idempotency_key: "evt-metrics",
       correlation_id: "corr-metrics",
       input_json: {}
+    )
+    execution.node_executions.create!(
+      node_key: "sync_crm",
+      node_type: "http_request",
+      status: "succeeded",
+      attempt: 1,
+      input_json: {},
+      output_json: {},
+      started_at: 0.025.seconds.ago,
+      completed_at: Time.current,
+      duration_ms: 25
     )
     organization.dead_letters.create!(workflow_execution: execution, reason: "test_failure")
 
@@ -53,6 +65,10 @@ class RateLimitingAndMetricsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, 'flowbridge_workflow_executions_total{status="failed"} 1'
+    assert_includes response.body, 'flowbridge_node_executions_total{node_type="http_request",status="succeeded"} 1'
+    assert_includes response.body, 'flowbridge_node_execution_duration_ms_avg{node_type="http_request"} 25.0'
+    assert_includes response.body, "flowbridge_workflow_retries_total 1"
     assert_includes response.body, "flowbridge_dead_letters_open 1"
+    assert_includes response.body, 'flowbridge_dead_letters_total{status="open",reason="test_failure"} 1'
   end
 end

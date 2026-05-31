@@ -10,6 +10,8 @@ FlowBridge must behave like a production-near Rails automation platform in local
 - outbound HTTP connector egress blocks SSRF targets by default;
 - workflow graphs fail fast before publication when node config is invalid;
 - duplicate jobs cannot run the same execution concurrently;
+- outbound unsafe HTTP methods carry deterministic idempotency and correlation headers;
+- Prometheus metrics expose node execution, retry, duration, and dead-letter dimensions;
 - API and bootstrap rate limits use atomic cache increments;
 - public tenant bootstrap has abuse controls and does not allow clients to self-assign privileged limits;
 - tests prove the above with local-only infrastructure.
@@ -22,6 +24,8 @@ FlowBridge must behave like a production-near Rails automation platform in local
 | SSRF through HTTP connector | Connector targets are resolved and blocked when they hit loopback, private, link-local, multicast, documentation, or metadata-service networks unless explicitly allowlisted. | `FlowBridge::HttpEgressPolicy`, `test/services/http_egress_policy_test.rb`, `test/services/node_executor_test.rb` |
 | Unsafe graph publication | Invalid node type, duplicate key, bad trigger position, bad HTTP config, bad filter config, and invalid retry policy are rejected before `WorkflowVersion` creation succeeds. | `FlowBridge::WorkflowGraphValidator`, `test/models/workflow_version_test.rb` |
 | Duplicate execution attempts | A recent `running` execution is treated as actively leased and a second job does not create another attempt. | `FlowBridge::ExecutionRunner`, `test/services/execution_runner_test.rb` |
+| Outbound duplicate side effects | Non-GET HTTP connectors receive deterministic `Idempotency-Key` and `X-FlowBridge-Correlation-Id` headers by default. | `FlowBridge::NodeExecutor`, `test/services/node_executor_test.rb` |
+| Thin operational metrics | `/metrics` exposes workflow execution status, webhook status, node execution status/type, node duration average, retry count, and dead letters by reason/status. | `FlowBridge::Metrics`, `test/integration/rate_limiting_and_metrics_test.rb` |
 | Non-atomic rate limit | API rate limits and public bootstrap limits use cache `increment` with a synchronized fallback. | `FlowBridge::RateLimiter`, `test/integration/rate_limiting_and_metrics_test.rb` |
 | Public tenant abuse | Organization creation is IP/hour limited and ignores client-supplied `plan` or `rate_limit_per_minute`. | `Api::V1::OrganizationsController`, OpenAPI create schema, integration tests |
 | External dependency in tests | HTTP connector tests use a local TCP server, not internet or SaaS dependencies. | `test/support/api_test_helper.rb` |

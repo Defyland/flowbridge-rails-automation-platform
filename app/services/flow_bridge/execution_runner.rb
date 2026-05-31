@@ -80,6 +80,11 @@ module FlowBridge
 
     def node_input(previous_outputs)
       {
+        "execution" => {
+          "id" => execution.id,
+          "correlation_id" => execution.correlation_id,
+          "idempotency_key" => execution.idempotency_key
+        },
         "event" => execution.input_json,
         "previous_outputs" => previous_outputs
       }

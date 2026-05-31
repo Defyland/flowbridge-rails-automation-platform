@@ -20,12 +20,18 @@ class NodeExecutorTest < ActiveSupport::TestCase
             "headers" => { "X-Trace-Id" => "trace-1" }
           }
         },
-        input: { "event" => { "email" => "buyer@example.com" }, "previous_outputs" => {} }
+        input: {
+          "execution" => { "id" => 42, "correlation_id" => "corr-node-test" },
+          "event" => { "email" => "buyer@example.com" },
+          "previous_outputs" => {}
+        }
       ).call
 
       assert_equal 201, result.dig("response", "status")
       assert_equal({ "id" => "contact_123" }, result.dig("response", "body"))
       assert_includes requests.first.fetch(:headers), "Authorization: Bearer super-secret-token-value"
+      assert_includes requests.first.fetch(:headers), "Idempotency-Key: flowbridge:execution:42:node:sync_crm"
+      assert_match(/X-Flowbridge-Correlation-Id: corr-node-test/i, requests.first.fetch(:headers))
       assert_equal "Bear...alue", result.dig("request", "headers", "Authorization")
     end
   end

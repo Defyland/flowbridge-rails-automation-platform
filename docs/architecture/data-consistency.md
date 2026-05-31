@@ -14,6 +14,8 @@ Webhook idempotency is enforced by a unique index on `[workflow_version_id, idem
 
 Execution idempotency also protects the worker side. If a duplicate job sees a recent `running` execution, it exits without creating another attempt. Manual retry must first move the execution back to `queued`.
 
+Outbound HTTP connector idempotency is derived from the durable execution ID and node key: `flowbridge:execution:<id>:node:<node_key>`. The key is sent as `Idempotency-Key` for non-GET connector calls unless the workflow author explicitly provides a header or config override. This keeps retries for the same execution/node stable and gives downstream systems a dedupe key without exposing raw payload data.
+
 ## Rate-limit consistency
 
 API key and public bootstrap rate limits use `Rails.cache.increment` behind `FlowBridge::RateLimiter`, with a synchronized fallback for stores that do not implement atomic increments. The production target is a cache backend with atomic increment support; the fallback keeps local/test behavior deterministic.

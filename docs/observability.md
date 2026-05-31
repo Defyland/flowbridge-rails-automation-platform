@@ -8,7 +8,7 @@ FlowBridge treats observability as part of the workflow engine, not as an extern
 | --- | --- | --- |
 | Liveness | `GET /up` | Confirms the Rails process can respond. |
 | Readiness | `GET /ready` | Confirms database and queue dependencies are usable before routing traffic. |
-| Metrics | `GET /metrics` | Exposes Prometheus text metrics for webhook events, workflow executions, dead letters, and rate limits. |
+| Metrics | `GET /metrics` | Exposes Prometheus text metrics for webhook events, workflow executions, node executions, retries, node durations, and dead letters. |
 | Logs | `config/initializers/logging.rb` | Emits structured JSON logs with request, correlation, and organization context. |
 | Traces | `config/initializers/open_telemetry.rb` | Enables Rack, Action Pack, Active Job, and Active Record instrumentation when `OTEL_ENABLED=true`. |
 | Dashboard | `docs/diagrams/grafana-flowbridge-overview.json` | Provides an importable Grafana view for webhook, execution, and DLQ health. |
@@ -35,6 +35,8 @@ Execution rows are a first-class observability surface:
 - `workflow_executions` stores the workflow, immutable workflow version, status, idempotency key, correlation ID, retry count, and payload snapshot.
 - `node_executions` stores node-level status, attempts, started/finished timestamps, output, and error payloads.
 - `dead_letters` stores terminal failure context and operator remediation state.
+
+`/metrics` mirrors this evidence with status/type dimensions so a reviewer can see failure concentration by workflow status, node type, dead-letter reason, and retry pressure without opening a database console.
 
 The operator console exposes these records so support and engineering can inspect failures without database access.
 

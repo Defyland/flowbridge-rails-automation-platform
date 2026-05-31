@@ -1,4 +1,5 @@
 require "base64"
+require "digest"
 
 module FlowBridge
   class NodeExecutor
@@ -89,6 +90,8 @@ module FlowBridge
       credential = find_credential
 
       headers = credential_headers(config.fetch("headers", {}).dup, credential)
+      headers["X-FlowBridge-Correlation-Id"] ||= input.dig("execution", "correlation_id").to_s if input.dig("execution", "correlation_id").present?
+      apply_idempotency_header(headers, method)
       response = FlowBridge::HttpClient.request(
         url: url,
         method: method,
@@ -166,6 +169,23 @@ module FlowBridge
       end
 
       headers
+    end
+
+    def apply_idempotency_header(headers, method)
+      return if method == "GET"
+
+      header_name = config.fetch("idempotency_header", "Idempotency-Key").to_s
+      return if header_name.blank? || headers.key?(header_name)
+
+      headers[header_name] = config["idempotency_key"].presence || outbound_idempotency_key
+    end
+
+    def outbound_idempotency_key
+      execution_id = input.dig("execution", "id")
+      return "flowbridge:execution:#{execution_id}:node:#{node.fetch("key")}" if execution_id.present?
+
+      digest = Digest::SHA256.hexdigest({ organization_id: organization.id, node_key: node.fetch("key"), event: input.fetch("event", {}) }.to_json)
+      "flowbridge:event:#{digest}"
     end
 
     def raise_http_error(url, response)

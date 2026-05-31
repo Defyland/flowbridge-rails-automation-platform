@@ -73,7 +73,7 @@ Controls:
 - retry permission gate
 - audit log action
 - append-only attempt evidence
-- future connector-level outbound idempotency keys
+- deterministic outbound idempotency key for non-GET HTTP connector calls
 
 ## Queue exhaustion
 

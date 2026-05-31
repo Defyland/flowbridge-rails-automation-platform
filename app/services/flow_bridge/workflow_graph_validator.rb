@@ -120,6 +120,9 @@ module FlowBridge
         add(:graph_json, "http_request node #{index} headers must be a string map")
       end
 
+      idempotency_header = config.fetch("idempotency_header", "Idempotency-Key")
+      add(:graph_json, "http_request node #{index} idempotency_header must be a string") unless idempotency_header.is_a?(String)
+
       credential_id = config["credential_id"]
       return if credential_id.blank?
 
