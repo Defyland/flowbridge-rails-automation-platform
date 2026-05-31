@@ -4,13 +4,16 @@
 
 Verified on 2026-05-31 against the local repository state after the tech-lead hardening pass.
 
-The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, graph validation, duplicate-execution guarding, outbound idempotency, atomic rate limiting, public bootstrap abuse controls, and executable OpenAPI response contracts.
+The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, SSRF-aware egress policy, graph validation, duplicate-execution guarding, outbound idempotency, secret-safe connector evidence, atomic rate limiting, public bootstrap abuse controls, executable OpenAPI response contracts, and stricter local/remote CI gates.
 
 ## Commands Run
 
 - `bin/rails test test/services/node_executor_test.rb test/services/execution_runner_test.rb test/models/workflow_version_test.rb test/integration/rate_limiting_and_metrics_test.rb`
   - Result: passed.
   - Evidence: 12 runs, 52 assertions, 0 failures, 0 errors, 0 skips.
+- `bin/rails test test/services/secret_masker_test.rb test/services/node_executor_test.rb test/integration/webhook_failure_scenarios_test.rb`
+  - Result: passed.
+  - Evidence: 8 runs, 46 assertions, 0 failures, 0 errors, 0 skips.
 - `bin/rails test test/integration/openapi_response_contract_test.rb test/repository_spec_compliance_test.rb`
   - Result: passed.
   - Evidence: 7 runs, 1089 assertions, 0 failures, 0 errors, 0 skips.
@@ -19,11 +22,11 @@ The repository now has explicit product, domain, architecture, security, scalabi
   - Evidence: 4 runs, 21 assertions, 0 failures, 0 errors, 0 skips.
 - `bin/rails test:all`
   - Result: passed.
-  - Evidence: 46 runs, 1258 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
+  - Evidence: 49 runs, 1278 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
 - `bin/rubocop`
   - Result: passed.
-  - Evidence: 100 files inspected, no offenses detected.
-- `bin/brakeman --no-pager`
+  - Evidence: 101 files inspected, no offenses detected.
+- `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error`
   - Result: passed.
   - Evidence: 0 security warnings.
 - `bin/bundler-audit`
@@ -40,11 +43,9 @@ The repository now has explicit product, domain, architecture, security, scalabi
   - Evidence: `Markdown links OK`.
 - `bin/ci`
   - Result: passed.
-  - Evidence: setup, RuboCop, Bundler Audit, Brakeman, OpenAPI parse, Rails tests, and seed replant all passed in 14.02s.
-  - Rails test evidence inside CI: 46 runs, 1258 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
-- `bin/rails test:system`
-  - Result: passed.
-  - Evidence: 1 run, 3 assertions, 0 failures, 0 errors, 0 skips.
+  - Evidence: setup, RuboCop, Bundler Audit, strict Brakeman, OpenAPI parse, Rails tests, system tests, and seed replant all passed in 43.88s.
+  - Rails test evidence inside CI: 49 runs, 1278 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
+  - System test evidence inside CI: 1 run, 3 assertions, 0 failures, 0 errors, 0 skips.
 - `docker build -t flowbridge:test .`
   - Result: passed.
   - Evidence: image `flowbridge:test` built successfully with production asset precompilation.
@@ -67,10 +68,12 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - CI-facing repository compliance now checks required documentation directories/files, route-to-OpenAPI coverage for every `/api/v1` route, 2xx response schemas, and parseable event schemas.
 - OpenAPI integration tests validate real JSON responses for organization, credential, workflow, workflow version, webhook, execution, dead-letter, retry, resolve, and standard error flows.
 - HTTP connector execution is real and tested against a local loopback endpoint.
+- Stored connector evidence masks credential headers, webhook signatures, cookies, and sensitive connector URL query parameters.
 - Workflow graph and retry policy validation reject invalid configs before publication.
 - Duplicate worker execution is guarded by a recent-running execution lease.
 - API key and public bootstrap rate limits use the shared atomic limiter.
 - Public organization creation is abuse-limited and no longer accepts client-supplied plan or rate-limit escalation.
+- Local `bin/ci` and GitHub Actions both run system tests and seed validation; Brakeman is configured to fail on warnings.
 
 ## Partial Criteria
 

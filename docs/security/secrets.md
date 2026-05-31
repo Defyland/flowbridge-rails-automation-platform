@@ -25,11 +25,13 @@
 - API keys are stored as digests and raw tokens are returned once.
 - Webhook secrets are encrypted per workflow version.
 - Credentials are encrypted per organization.
+- Webhook signatures, authorization headers, cookies, credential-bearing headers, and sensitive URL query parameters are masked before being stored as webhook headers, node outputs, errors, audit metadata, or dead-letter evidence.
 
 ## Operational rules
 
 - Never commit raw production secrets.
 - Rotate API keys when token leakage is suspected.
 - Rotate webhook secrets by publishing a new workflow version.
+- Do not put connector credentials in URLs. When an upstream requires query credentials, FlowBridge still masks common sensitive parameters in stored evidence, but headers plus encrypted credentials remain the preferred path.
 - Rotate database and registry credentials through environment configuration, not code changes.
 - Treat CI logs as observable by maintainers and avoid printing secret values.

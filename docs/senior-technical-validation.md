@@ -13,10 +13,10 @@ FlowBridge models a real B2B automation workflow: tenant onboarding, workflow pu
 - Retry and dead-letter behavior is deterministic and tested.
 - Tenant isolation is enforced through scoped queries and tested through request specs.
 - Credentials and webhook secrets are encrypted.
-- Secret-bearing outputs are masked.
+- Secret-bearing headers, webhook signatures, connector URLs, outputs, and errors are masked before persistence.
 - Operational endpoints cover liveness, readiness, and Prometheus metrics.
 - OpenAPI is not only descriptive: every `/api/v1` route is checked for contract coverage, and real integration responses are validated against documented schemas.
-- CI validates PostgreSQL-backed tests, Capybara system tests, linting, security scans, OpenAPI, coverage artifact generation, and Docker build.
+- CI validates PostgreSQL-backed tests, Capybara system tests, seed replanting, strict security scans, OpenAPI, coverage artifact generation, and Docker build.
 
 ## Review notes
 

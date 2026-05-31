@@ -37,11 +37,11 @@ When a test needs a one-off state, it can still create records inline. Shared ex
 - OpenAPI YAML parsing
 - OpenAPI route coverage and response-contract tests
 - `bin/rails test:all`
+- `bin/rails test:system`
 - `RAILS_ENV=test bin/rails db:seed:replant`
 
 Additional release confidence checks used for the spec-driven pass:
 
-- `bin/rails test:system`
 - Redocly OpenAPI lint
 - Markdown relative-link validation
 - event JSON schema parsing
@@ -59,6 +59,7 @@ Coverage is useful as a regression signal, not as a substitute for behavioral te
 - idempotent webhook ingestion
 - execution retry and failure transitions
 - dead-letter creation and remediation
+- secret masking for connector evidence, webhook signatures, and sensitive URL query parameters
 - metrics endpoint behavior
 - required repository documentation and contracts
 - OpenAPI route coverage plus real response/schema drift
