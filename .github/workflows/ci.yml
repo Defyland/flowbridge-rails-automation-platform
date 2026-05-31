@@ -23,6 +23,7 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     env:
+      RAILS_ENV: test
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_USER: flowbridge
@@ -35,10 +36,13 @@ jobs:
       - name: Prepare database
         run: bin/rails db:prepare
       - name: Run test suite
-        env:
-          RAILS_ENV: test
         run: bin/rails test:all
+      - name: Run system test smoke
+        run: bin/rails test:system
+      - name: Verify test seeds
+        run: bin/rails db:seed:replant
       - name: Upload coverage artifact
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: coverage
@@ -64,7 +68,7 @@ jobs:
         with:
           bundler-cache: true
       - name: Brakeman static analysis
-        run: bin/brakeman --no-pager
+        run: bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
       - name: Bundler audit
         run: bin/bundler-audit
 
