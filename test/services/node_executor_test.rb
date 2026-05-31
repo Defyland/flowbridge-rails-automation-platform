@@ -8,6 +8,7 @@ class NodeExecutorTest < ActiveSupport::TestCase
     credential.save!
 
     with_test_http_endpoint(status: 201, body: { id: "contact_123" }) do |url, requests|
+      connector_url = "#{url}?access_token=upstream-secret-token&region=us"
       result = FlowBridge::NodeExecutor.new(
         organization: organization,
         node: {
@@ -15,7 +16,7 @@ class NodeExecutorTest < ActiveSupport::TestCase
           "type" => "http_request",
           "config" => {
             "method" => "POST",
-            "url" => url,
+            "url" => connector_url,
             "credential_id" => credential.id,
             "headers" => { "X-Trace-Id" => "trace-1" }
           }
@@ -30,9 +31,12 @@ class NodeExecutorTest < ActiveSupport::TestCase
       assert_equal 201, result.dig("response", "status")
       assert_equal({ "id" => "contact_123" }, result.dig("response", "body"))
       assert_includes requests.first.fetch(:headers), "Authorization: Bearer super-secret-token-value"
+      assert_includes requests.first.fetch(:headers), "access_token=upstream-secret-token"
       assert_includes requests.first.fetch(:headers), "Idempotency-Key: flowbridge:execution:42:node:sync_crm"
       assert_match(/X-Flowbridge-Correlation-Id: corr-node-test/i, requests.first.fetch(:headers))
       assert_equal "Bear...alue", result.dig("request", "headers", "Authorization")
+      assert_equal "#{url}?access_token=upst...oken&region=us", result.dig("request", "url")
+      refute_includes result.to_s, "upstream-secret-token"
     end
   end
 
@@ -40,13 +44,14 @@ class NodeExecutorTest < ActiveSupport::TestCase
     organization, = create_organization_with_key
 
     with_test_http_endpoint(status: 422, body: { error: "invalid" }) do |url, _requests|
+      connector_url = "#{url}?api_key=upstream-secret-token"
       error = assert_raises(FlowBridge::NodeExecutor::ExecutionError) do
         FlowBridge::NodeExecutor.new(
           organization: organization,
           node: {
             "key" => "sync_crm",
             "type" => "http_request",
-            "config" => { "method" => "POST", "url" => url }
+            "config" => { "method" => "POST", "url" => connector_url }
           },
           input: { "event" => { "email" => "bad@example.com" }, "previous_outputs" => {} }
         ).call
@@ -55,6 +60,8 @@ class NodeExecutorTest < ActiveSupport::TestCase
       assert_equal "http_permanent_failure", error.code
       assert_equal false, error.retriable?
       assert_equal 422, error.details.fetch(:status)
+      assert_equal "#{url}?api_key=upst...oken", error.details.fetch(:url)
+      refute_includes error.to_h.to_s, "upstream-secret-token"
     end
   end
 

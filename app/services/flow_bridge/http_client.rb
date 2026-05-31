@@ -75,9 +75,12 @@ module FlowBridge
       uri = URI.parse(url.to_s)
       return uri if (uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)) && uri.host.present?
 
-      raise InvalidRequestError.new("HTTP connector URL must use http or https", details: { url: url })
+      raise InvalidRequestError.new(
+        "HTTP connector URL must use http or https",
+        details: { url: FlowBridge::SecretMasker.mask_url(url) }
+      )
     rescue URI::InvalidURIError => error
-      raise InvalidRequestError.new(error.message, details: { url: url })
+      raise InvalidRequestError.new(error.message, details: { url: FlowBridge::SecretMasker.mask_url(url) })
     end
 
     def parse_timeout(timeout)
@@ -158,7 +161,7 @@ module FlowBridge
     end
 
     def safe_url
-      uri.to_s
+      FlowBridge::SecretMasker.mask_url(uri.to_s)
     end
   end
 end

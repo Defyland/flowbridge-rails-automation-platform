@@ -36,4 +36,19 @@ class WebhookFailureScenariosTest < ActionDispatch::IntegrationTest
     assert_equal 1, version.webhook_events.count
     assert_equal 1, version.workflow_executions.count
   end
+
+  test "persists webhook headers without storing the raw signature" do
+    organization, = create_organization_with_key
+    version = publish_workflow_version(organization: organization)
+    raw_payload = JSON.generate({ email: "masked@example.com" })
+    headers = webhook_headers_for(version, raw_payload, event_id: "evt-masked-signature")
+
+    post "/api/v1/webhooks/#{version.trigger_key}", params: raw_payload, headers: headers
+
+    assert_response :accepted
+    event = version.webhook_events.sole
+    assert_equal "evt-masked-signature", event.source_event_id
+    refute_includes event.headers_json.to_s, headers.fetch("X-FlowBridge-Signature")
+    assert_match(/\Asha2\.\.\..+\z/, event.headers_json.fetch("x-flowbridge-signature"))
+  end
 end

@@ -105,7 +105,7 @@ module FlowBridge
       {
         "request" => {
           "method" => method,
-          "url" => url,
+          "url" => SecretMasker.mask_url(url),
           "headers" => SecretMasker.mask_hash(headers),
           "credential" => credential&.then { |item| { "id" => item.id, "name" => item.name, "secret" => item.masked_secret } }
         }.compact,
@@ -190,11 +190,12 @@ module FlowBridge
 
     def raise_http_error(url, response)
       retriable = FlowBridge::HttpClient.retriable_status?(response.status)
+      safe_url = SecretMasker.mask_url(url)
       raise ExecutionError.new(
         retriable ? "http_transient_failure" : "http_permanent_failure",
-        "HTTP request to #{url} failed with status #{response.status}",
+        "HTTP request to #{safe_url} failed with status #{response.status}",
         retriable: retriable,
-        details: { url: url, status: response.status, response: response.body }
+        details: { url: safe_url, status: response.status, response: response.body }
       )
     end
 
