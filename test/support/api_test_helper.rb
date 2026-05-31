@@ -53,6 +53,11 @@ module ApiTestHelper
     server = TCPServer.new("127.0.0.1", 0)
     requests = []
     mutex = Mutex.new
+    previous_allowlist = ENV["FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST"]
+    ENV["FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST"] = [
+      previous_allowlist,
+      "127.0.0.1"
+    ].compact_blank.join(",")
     thread = Thread.new do
       loop do
         client = server.accept
@@ -86,6 +91,7 @@ module ApiTestHelper
 
     yield "http://127.0.0.1:#{server.addr[1]}/contacts", requests
   ensure
+    previous_allowlist.nil? ? ENV.delete("FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST") : ENV["FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST"] = previous_allowlist
     server&.close
     thread&.kill
     thread&.join

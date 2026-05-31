@@ -51,6 +51,19 @@ Controls:
 - recursive masking
 - operator-facing records treated as masked evidence
 
+## Connector SSRF
+
+Attempt: workflow author configures an HTTP connector URL for loopback, metadata service, private network control plane, or other non-public target.
+
+Controls:
+
+- URL scheme validation before workflow version publication
+- IP-literal blocked-network validation before publication
+- DNS resolution and blocked-network enforcement before socket open
+- socket pinned to vetted resolved address
+- explicit private-host allowlist for intentional non-public connector targets
+- optional global connector host allowlist
+
 ## Dead-letter replay abuse
 
 Attempt: operator repeatedly retries a non-idempotent failure and duplicates downstream writes.

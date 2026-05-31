@@ -18,6 +18,7 @@
 - Webhook and execution idempotency are enforced by unique indexes.
 - Sensitive keys are masked in outputs, audit metadata, and stored webhook headers.
 - Rate limiting is enforced per API key per minute.
+- HTTP connector egress resolves target hosts, blocks SSRF-sensitive networks by default, and pins the socket to the vetted IP address.
 - Brakeman and bundler-audit run in CI.
 
 ## Threats and mitigations
@@ -29,6 +30,7 @@
 | Webhook spoofing | per-version HMAC signatures |
 | Webhook replay | idempotency key uniqueness |
 | Secret leakage in logs | recursive secret masking and encrypted storage |
+| SSRF through connector URL | egress policy blocks loopback, private, link-local, multicast, documentation, and metadata-service networks |
 | Workflow mutation during replay | immutable workflow versions |
 | Retry storm | retry policy with max attempts and dead letters |
 
@@ -82,6 +84,24 @@ Residual risk:
 
 - downstream systems without idempotent APIs may still observe duplicate side effects; connector-specific idempotency keys should be added before real integrations
 
+### Connector SSRF
+
+Risk: a workflow author points an HTTP connector at instance metadata, loopback services, private control planes, or documentation/bogon networks to extract internal data.
+
+Controls:
+
+- reject non-HTTP schemes before publication
+- reject IP-literal connector URLs that target blocked networks before publication
+- resolve connector hosts before execution
+- block loopback, private, link-local, multicast, documentation, and metadata-service ranges by default
+- pin `Net::HTTP` to the vetted address to reduce DNS rebinding exposure
+- require explicit `FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST` for intentional private targets in local/test/on-prem scenarios
+- optionally restrict all connector egress with `FLOWBRIDGE_CONNECTOR_ALLOWED_HOSTS`
+
+Residual risk:
+
+- production deployments should still pair this app-level guard with network-level egress policy and connector-specific allowlists
+
 ### Credentials masking
 
 Risk: credentials appear in node inputs, outputs, event payloads, logs, audit metadata, or dead-letter records.
@@ -117,7 +137,7 @@ Residual risk:
 
 - Local rate limiting uses Rails cache and is not distributed until backed by Redis or another shared cache.
 - Credential rotation workflows are planned but not yet implemented.
-- External HTTP calls are represented by deterministic mock nodes in this implementation slice.
+- External HTTP calls are real `http_request` connector nodes with local-loopback tests; production connector onboarding still needs vendor-specific idempotency and contract tests.
 
 ## Transversal architecture additions
 

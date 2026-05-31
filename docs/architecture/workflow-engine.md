@@ -34,7 +34,7 @@ The current MVP stores these facts in relational records. Future external consum
 
 ## Connector execution
 
-`http_request` nodes execute through `FlowBridge::HttpClient`, which uses real `Net::HTTP` requests with bounded open/read/write timeouts. Tests use loopback HTTP endpoints so CI proves connector behavior without depending on internet access or third-party systems. Non-2xx responses are classified as retriable for transient HTTP status codes and permanent for client/configuration failures.
+`http_request` nodes execute through `FlowBridge::HttpClient`, which uses real `Net::HTTP` requests with bounded open/read/write timeouts. `FlowBridge::HttpEgressPolicy` resolves the target before opening the socket, blocks loopback/private/link-local/multicast/documentation networks by default, and pins the socket to the vetted address with `Net::HTTP#ipaddr`. Tests use allowlisted loopback HTTP endpoints so CI proves connector behavior without depending on internet access or third-party systems. Non-2xx responses are classified as retriable for transient HTTP status codes and permanent for client/configuration failures.
 
 ## Idempotency boundaries
 

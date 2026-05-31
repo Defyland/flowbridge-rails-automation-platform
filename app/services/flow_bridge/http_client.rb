@@ -43,10 +43,13 @@ module FlowBridge
 
     def initialize(url:, method:, headers:, body:, timeout_seconds:)
       @uri = parse_uri(url)
+      @egress = FlowBridge::HttpEgressPolicy.check!(uri)
       @method = method.to_s.upcase
       @headers = headers || {}
       @body = body
       @timeout_seconds = parse_timeout(timeout_seconds)
+    rescue FlowBridge::HttpEgressPolicy::Violation => error
+      raise InvalidRequestError.new(error.message, details: error.details)
     end
 
     def request
@@ -66,7 +69,7 @@ module FlowBridge
 
     private
 
-    attr_reader :uri, :method, :headers, :body, :timeout_seconds
+    attr_reader :uri, :egress, :method, :headers, :body, :timeout_seconds
 
     def parse_uri(url)
       uri = URI.parse(url.to_s)
@@ -94,8 +97,12 @@ module FlowBridge
     end
 
     def perform_request
-      Net::HTTP.start(uri.host, uri.port, http_options) do |http|
-        http.request(build_request)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.ipaddr = egress.connect_ip
+      http_options.each { |key, value| http.public_send("#{key}=", value) }
+
+      http.start do |connection|
+        connection.request(build_request)
       end
     end
 

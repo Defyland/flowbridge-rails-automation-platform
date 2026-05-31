@@ -86,6 +86,7 @@ CI must cover lint, security, tests, OpenAPI validation, Docker build, and cover
 | Test strategy is documented | `docs/testing-strategy.md`, `bin/ci` | Done | Minitest, fixtures, system tests, CI, and release checks are explicit. |
 | CI passes | `.github/workflows/ci.yml`, `bin/ci` | Done | Recorded in verification report. |
 | HTTP connector executes real requests | `app/services/flow_bridge/http_client.rb`, `test/services/node_executor_test.rb` | Done | Uses loopback HTTP in tests; no third-party service dependency. |
+| HTTP connector blocks SSRF egress | `app/services/flow_bridge/http_egress_policy.rb`, `test/services/http_egress_policy_test.rb` | Done | Blocks private/link-local/loopback/metadata ranges unless explicitly allowlisted. |
 | Workflow graph is validated before publication | `app/services/flow_bridge/workflow_graph_validator.rb`, `test/models/workflow_version_test.rb` | Done | Rejects invalid node shape, HTTP config, filter config, trigger placement, and retry policy. |
 | Duplicate execution attempts are guarded | `app/services/flow_bridge/execution_runner.rb`, `test/services/execution_runner_test.rb` | Done | Recent running executions are treated as active leases. |
 | Rate limits use atomic increments | `app/services/flow_bridge/rate_limiter.rb`, `test/integration/rate_limiting_and_metrics_test.rb` | Done | API key limit and public bootstrap limit share the limiter. |

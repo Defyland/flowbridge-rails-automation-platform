@@ -39,6 +39,20 @@ class WorkflowVersionTest < ActiveSupport::TestCase
     assert_match(/url must use http or https/, error.message)
   end
 
+  test "rejects blocked egress targets before publication when they are IP literals" do
+    organization, = create_organization_with_key
+    workflow = organization.workflows.create!(name: "SSRF Attempt")
+
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      FlowBridge::WorkflowPublisher.publish!(
+        workflow: workflow,
+        graph: sample_graph(url: "http://169.254.169.254/latest/meta-data")
+      )
+    end
+
+    assert_match(/blocked network/, error.message)
+  end
+
   test "rejects invalid filter and retry policy config" do
     organization, = create_organization_with_key
     workflow = organization.workflows.create!(name: "Invalid Filter")

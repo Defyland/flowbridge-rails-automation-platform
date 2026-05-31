@@ -131,6 +131,11 @@ module FlowBridge
       parsed = URI.parse(url.to_s)
       unless (parsed.is_a?(URI::HTTP) || parsed.is_a?(URI::HTTPS)) && parsed.host.present?
         add(:graph_json, "http_request node #{index} url must use http or https")
+        return
+      end
+
+      if FlowBridge::HttpEgressPolicy.blocked_ip_literal?(parsed.host)
+        add(:graph_json, "http_request node #{index} url targets a blocked network")
       end
     rescue URI::InvalidURIError
       add(:graph_json, "http_request node #{index} url is invalid")
