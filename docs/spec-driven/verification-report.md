@@ -4,22 +4,25 @@
 
 Verified on 2026-05-31 against the local repository state after the tech-lead hardening pass.
 
-The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, graph validation, duplicate-execution guarding, atomic rate limiting, and public bootstrap abuse controls.
+The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, graph validation, duplicate-execution guarding, outbound idempotency, atomic rate limiting, public bootstrap abuse controls, and executable OpenAPI response contracts.
 
 ## Commands Run
 
 - `bin/rails test test/services/node_executor_test.rb test/services/execution_runner_test.rb test/models/workflow_version_test.rb test/integration/rate_limiting_and_metrics_test.rb`
   - Result: passed.
   - Evidence: 12 runs, 52 assertions, 0 failures, 0 errors, 0 skips.
+- `bin/rails test test/integration/openapi_response_contract_test.rb test/repository_spec_compliance_test.rb`
+  - Result: passed.
+  - Evidence: 7 runs, 1089 assertions, 0 failures, 0 errors, 0 skips.
 - `bin/rails test test/integration/api_workflow_lifecycle_test.rb test/jobs/workflow_execution_job_test.rb test/integration/webhook_failure_scenarios_test.rb`
   - Result: passed.
   - Evidence: 4 runs, 21 assertions, 0 failures, 0 errors, 0 skips.
 - `bin/rails test:all`
   - Result: passed.
-  - Evidence: 37 runs, 250 assertions, 0 failures, 0 errors, 0 skips, 78.46% line coverage.
-- `bin/rubocop -f simple`
+  - Evidence: 46 runs, 1258 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
+- `bin/rubocop`
   - Result: passed.
-  - Evidence: 97 files inspected, no offenses detected.
+  - Evidence: 100 files inspected, no offenses detected.
 - `bin/brakeman --no-pager`
   - Result: passed.
   - Evidence: 0 security warnings.
@@ -31,11 +34,14 @@ The repository now has explicit product, domain, architecture, security, scalabi
   - Evidence: CI, deploy, and OpenAPI YAML parsed.
 - `npx --yes @redocly/cli lint openapi.yaml`
   - Result: passed.
-  - Evidence: `openapi.yaml: validated`.
+  - Evidence: `openapi.yaml: validated` with no warnings.
+- Markdown relative-link validation across `README.md` and `docs/**/*.md`
+  - Result: passed.
+  - Evidence: `Markdown links OK`.
 - `bin/ci`
   - Result: passed.
-  - Evidence: setup, RuboCop, Bundler Audit, Brakeman, OpenAPI parse, Rails tests, and seed replant all passed in 24.84s.
-  - Rails test evidence inside CI: 37 runs, 250 assertions, 0 failures, 0 errors, 0 skips, 86.0% line coverage.
+  - Evidence: setup, RuboCop, Bundler Audit, Brakeman, OpenAPI parse, Rails tests, and seed replant all passed in 14.02s.
+  - Rails test evidence inside CI: 46 runs, 1258 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
 - `bin/rails test:system`
   - Result: passed.
   - Evidence: 1 run, 3 assertions, 0 failures, 0 errors, 0 skips.
@@ -58,7 +64,8 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - Testing documentation covers Minitest layers, fixture strategy, CI gate, coverage expectations, and intentional gaps.
 - Event documentation covers workflow, execution, node, webhook, and DLQ events with idempotency by `event_id`, `source`, and `workflow_id`.
 - ADRs capture irreversible workflow-version decisions and event sourcing as a future option rather than an MVP dependency.
-- CI-facing repository compliance now checks required documentation directories/files and parseable event schemas.
+- CI-facing repository compliance now checks required documentation directories/files, route-to-OpenAPI coverage for every `/api/v1` route, 2xx response schemas, and parseable event schemas.
+- OpenAPI integration tests validate real JSON responses for organization, credential, workflow, workflow version, webhook, execution, dead-letter, retry, resolve, and standard error flows.
 - HTTP connector execution is real and tested against a local loopback endpoint.
 - Workflow graph and retry policy validation reject invalid configs before publication.
 - Duplicate worker execution is guarded by a recent-running execution lease.

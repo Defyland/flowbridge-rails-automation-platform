@@ -9,10 +9,10 @@ FlowBridge uses the Rails 8 default testing stack: Minitest, fixtures, integrati
 | Model tests | `test/models/*` | Validate local invariants such as tenant ownership, immutable versions, credential masking, and auth-related constraints. |
 | Service tests | `test/services/*` | Exercise workflow execution behavior, retry transitions, node evidence, and dead-letter creation. |
 | Job tests | `test/jobs/*` | Verify Active Job integration around workflow execution. |
-| Integration tests | `test/integration/*` | Cover API lifecycle, authorization, tenant isolation, webhook signatures, duplicate delivery, rate limits, metrics, and failure scenarios. |
+| Integration tests | `test/integration/*` | Cover API lifecycle, authorization, tenant isolation, webhook signatures, duplicate delivery, rate limits, metrics, failure scenarios, and OpenAPI response contracts against real JSON payloads. |
 | Controller tests | `test/controllers/*` | Cover Rails-auth session and password flows. |
 | System tests | `test/system/*` | Verify the operator console can render real workflow and execution data through the browser stack. |
-| Repository compliance | `test/repository_spec_compliance_test.rb` | Guards README sections, required docs, OpenAPI shape, and parseable workflow event contracts. |
+| Repository compliance | `test/repository_spec_compliance_test.rb` | Guards README sections, required docs, OpenAPI route coverage, 2xx response schemas, and parseable workflow event contracts. |
 
 ## Fixture Strategy
 
@@ -35,6 +35,7 @@ When a test needs a one-off state, it can still create records inline. Shared ex
 - `bin/bundler-audit`
 - `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error`
 - OpenAPI YAML parsing
+- OpenAPI route coverage and response-contract tests
 - `bin/rails test:all`
 - `RAILS_ENV=test bin/rails db:seed:replant`
 
@@ -44,6 +45,7 @@ Additional release confidence checks used for the spec-driven pass:
 - Redocly OpenAPI lint
 - Markdown relative-link validation
 - event JSON schema parsing
+- route-to-OpenAPI drift checks for every `/api/v1` route
 - CI/deploy workflow YAML parsing
 - `docker build -t flowbridge:test .`
 
@@ -59,6 +61,7 @@ Coverage is useful as a regression signal, not as a substitute for behavioral te
 - dead-letter creation and remediation
 - metrics endpoint behavior
 - required repository documentation and contracts
+- OpenAPI route coverage plus real response/schema drift
 
 ## What Is Intentionally Not Tested Yet
 

@@ -97,7 +97,7 @@ See [docs/architecture/overview.md](docs/architecture/overview.md) and [docs/dia
 
 ## API documentation
 
-The OpenAPI contract is [openapi.yaml](openapi.yaml). Human-readable examples live in [docs/api/http-examples.md](docs/api/http-examples.md), and the standardized error format is documented in [docs/api/error-format.md](docs/api/error-format.md).
+The OpenAPI contract is [openapi.yaml](openapi.yaml). It is guarded as an executable contract: repository compliance verifies every `/api/v1` route is documented, and integration tests validate real JSON responses against the documented 2xx/error schemas. Human-readable examples live in [docs/api/http-examples.md](docs/api/http-examples.md), and the standardized error format is documented in [docs/api/error-format.md](docs/api/error-format.md).
 
 All product endpoints are versioned under `/api/v1`. Webhook ingress uses `/api/v1/webhooks/{trigger_key}` with `X-FlowBridge-Signature` and `X-FlowBridge-Event-Id`.
 
@@ -122,7 +122,7 @@ Minitest covers:
 - Active Job execution
 - metrics and rate limiting
 - repository spec compliance
-- OpenAPI shape checks
+- OpenAPI route coverage and response-contract checks
 - operator login and dead-letter resolution through Capybara system tests
 
 Run tests with:

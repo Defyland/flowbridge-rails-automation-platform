@@ -12,6 +12,7 @@ FlowBridge must behave like a production-near Rails automation platform in local
 - duplicate jobs cannot run the same execution concurrently;
 - outbound unsafe HTTP methods carry deterministic idempotency and correlation headers;
 - Prometheus metrics expose node execution, retry, duration, and dead-letter dimensions;
+- OpenAPI documents every versioned API route with executable JSON response schemas;
 - API and bootstrap rate limits use atomic cache increments;
 - public tenant bootstrap has abuse controls and does not allow clients to self-assign privileged limits;
 - tests prove the above with local-only infrastructure.
@@ -26,6 +27,7 @@ FlowBridge must behave like a production-near Rails automation platform in local
 | Duplicate execution attempts | A recent `running` execution is treated as actively leased and a second job does not create another attempt. | `FlowBridge::ExecutionRunner`, `test/services/execution_runner_test.rb` |
 | Outbound duplicate side effects | Non-GET HTTP connectors receive deterministic `Idempotency-Key` and `X-FlowBridge-Correlation-Id` headers by default. | `FlowBridge::NodeExecutor`, `test/services/node_executor_test.rb` |
 | Thin operational metrics | `/metrics` exposes workflow execution status, webhook status, node execution status/type, node duration average, retry count, and dead letters by reason/status. | `FlowBridge::Metrics`, `test/integration/rate_limiting_and_metrics_test.rb` |
+| API contract drift | Every `/api/v1` route is present in OpenAPI and every successful JSON response has a schema validated against real integration-test payloads. | `openapi.yaml`, `test/repository_spec_compliance_test.rb`, `test/integration/openapi_response_contract_test.rb` |
 | Non-atomic rate limit | API rate limits and public bootstrap limits use cache `increment` with a synchronized fallback. | `FlowBridge::RateLimiter`, `test/integration/rate_limiting_and_metrics_test.rb` |
 | Public tenant abuse | Organization creation is IP/hour limited and ignores client-supplied `plan` or `rate_limit_per_minute`. | `Api::V1::OrganizationsController`, OpenAPI create schema, integration tests |
 | External dependency in tests | HTTP connector tests use a local TCP server, not internet or SaaS dependencies. | `test/support/api_test_helper.rb` |
@@ -43,7 +45,8 @@ Run:
 
 ```bash
 bin/ci
-bin/rails test test/services/http_egress_policy_test.rb test/services/node_executor_test.rb test/models/workflow_version_test.rb test/services/execution_runner_test.rb test/integration/rate_limiting_and_metrics_test.rb
+bin/rails test test/services/http_egress_policy_test.rb test/services/node_executor_test.rb test/models/workflow_version_test.rb test/services/execution_runner_test.rb test/integration/rate_limiting_and_metrics_test.rb test/integration/openapi_response_contract_test.rb test/repository_spec_compliance_test.rb
+npx --yes @redocly/cli lint openapi.yaml
 ```
 
 Expected result: all checks pass locally using only PostgreSQL and loopback HTTP.
