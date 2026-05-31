@@ -93,6 +93,33 @@ class RepositorySpecComplianceTest < ActiveSupport::TestCase
     assert contract.dig("components", "schemas", "ErrorResponse")
   end
 
+  test "openapi contract covers every versioned API route" do
+    contract = YAML.load_file(Rails.root.join("openapi.yaml"))
+    documented_paths = contract.fetch("paths")
+
+    versioned_routes.each do |route|
+      assert documented_paths.dig(route.fetch(:path), route.fetch(:method)),
+        "OpenAPI must document #{route.fetch(:method).upcase} #{route.fetch(:path)}"
+    end
+  end
+
+  test "openapi contract documents json schemas for versioned API success responses" do
+    contract = YAML.load_file(Rails.root.join("openapi.yaml"))
+
+    contract.fetch("paths").each do |path, operations|
+      next unless path.start_with?("/api/v1/")
+
+      operations.each do |method, operation|
+        operation.fetch("responses").each do |status, response|
+          next unless status.start_with?("2")
+
+          assert response.dig("content", "application/json", "schema"),
+            "OpenAPI must document an application/json schema for #{method.upcase} #{path} #{status}"
+        end
+      end
+    end
+  end
+
   test "event contracts are documented as parseable json schemas" do
     event_docs = Rails.root.join("docs/events")
     schemas = event_docs.glob("*.v1.json")
@@ -107,6 +134,20 @@ class RepositorySpecComplianceTest < ActiveSupport::TestCase
       assert schema.dig("properties", "event_type"), "#{schema_path} should document event_type"
       assert schema.dig("properties", "schema_version"), "#{schema_path} should document schema_version"
       assert schema.dig("properties", "correlation_id"), "#{schema_path} should document correlation_id"
+    end
+  end
+
+  private
+
+  def versioned_routes
+    Rails.application.routes.routes.filter_map do |route|
+      path = route.path.spec.to_s.sub(/\(\.:format\)\z/, "")
+      next unless path.start_with?("/api/v1/")
+
+      {
+        method: route.verb.downcase,
+        path: path.gsub(/:(\w+)/, "{\\1}")
+      }
     end
   end
 end

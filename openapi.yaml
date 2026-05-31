@@ -76,9 +76,15 @@ paths:
       responses:
         "200":
           description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
+          $ref: "#/components/responses/Error"
+        "404":
           $ref: "#/components/responses/Error"
   /api/v1/workflows:
     get:
@@ -87,6 +93,10 @@ paths:
       responses:
         "200":
           description: Workflows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowListResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -103,7 +113,15 @@ paths:
       responses:
         "201":
           description: Workflow created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowResponse"
+        "401":
+          $ref: "#/components/responses/Error"
         "403":
+          $ref: "#/components/responses/Error"
+        "422":
           $ref: "#/components/responses/Error"
   /api/v1/workflows/{id}:
     get:
@@ -114,6 +132,14 @@ paths:
       responses:
         "200":
           description: Workflow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowWithVersionsResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
   /api/v1/workflows/{workflow_id}/versions:
@@ -125,6 +151,10 @@ paths:
       responses:
         "200":
           description: Workflow versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowVersionListResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -143,7 +173,37 @@ paths:
       responses:
         "201":
           description: Workflow version published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishWorkflowVersionResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
         "422":
+          $ref: "#/components/responses/Error"
+  /api/v1/workflows/{workflow_id}/versions/{id}:
+    get:
+      operationId: showWorkflowVersion
+      summary: Show immutable workflow version
+      parameters:
+        - $ref: "#/components/parameters/WorkflowId"
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Workflow version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowVersionResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
           $ref: "#/components/responses/Error"
   /api/v1/webhooks/{trigger_key}:
     post:
@@ -181,7 +241,17 @@ paths:
       responses:
         "202":
           description: Webhook accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookIngestionResponse"
+        "400":
+          $ref: "#/components/responses/Error"
         "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "422":
           $ref: "#/components/responses/Error"
   /api/v1/executions:
     get:
@@ -190,6 +260,10 @@ paths:
       responses:
         "200":
           description: Executions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowExecutionListResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -203,6 +277,14 @@ paths:
       responses:
         "200":
           description: Execution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowExecutionResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
   /api/v1/executions/{id}/retry:
@@ -214,6 +296,16 @@ paths:
       responses:
         "202":
           description: Retry queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowExecutionRetryResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
   /api/v1/dead_letters:
@@ -223,6 +315,10 @@ paths:
       responses:
         "200":
           description: Dead letters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeadLetterListResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -236,6 +332,14 @@ paths:
       responses:
         "200":
           description: Dead letter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeadLetterResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
   /api/v1/dead_letters/{id}/retry:
@@ -247,6 +351,14 @@ paths:
       responses:
         "202":
           description: Retry queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeadLetterRetryResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
   /api/v1/dead_letters/{id}/resolve:
@@ -258,6 +370,14 @@ paths:
       responses:
         "200":
           description: Dead letter resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeadLetterResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
   /api/v1/credentials:
@@ -267,6 +387,10 @@ paths:
       responses:
         "200":
           description: Credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CredentialListResponse"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -283,7 +407,34 @@ paths:
       responses:
         "201":
           description: Credential created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CredentialResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
         "422":
+          $ref: "#/components/responses/Error"
+  /api/v1/credentials/{id}:
+    get:
+      operationId: showCredential
+      summary: Show credential metadata
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Credential
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CredentialResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
           $ref: "#/components/responses/Error"
 components:
   securitySchemes:
@@ -328,16 +479,15 @@ components:
               type: string
     CreateOrganizationResponse:
       type: object
+      required:
+        - organization
+        - api_key
+      additionalProperties: false
       properties:
         organization:
           $ref: "#/components/schemas/Organization"
         api_key:
-          allOf:
-            - $ref: "#/components/schemas/ApiKey"
-            - type: object
-              properties:
-                token:
-                  type: string
+          $ref: "#/components/schemas/ApiKeyWithToken"
     CreateWorkflowRequest:
       type: object
       required:
@@ -406,6 +556,14 @@ components:
               additionalProperties: true
     Organization:
       type: object
+      required:
+        - id
+        - name
+        - slug
+        - plan
+        - rate_limit_per_minute
+        - created_at
+      additionalProperties: false
       properties:
         id:
           type: integer
@@ -415,8 +573,32 @@ components:
           type: string
         plan:
           type: string
-    ApiKey:
+          enum: [launch, scale, enterprise]
+        rate_limit_per_minute:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    OrganizationResponse:
       type: object
+      required:
+        - organization
+      additionalProperties: false
+      properties:
+        organization:
+          $ref: "#/components/schemas/Organization"
+    ApiKeyWithToken:
+      type: object
+      required:
+        - id
+        - name
+        - role
+        - token_hint
+        - last_used_at
+        - revoked_at
+        - created_at
+        - token
+      additionalProperties: false
       properties:
         id:
           type: integer
@@ -424,13 +606,609 @@ components:
           type: string
         role:
           type: string
+          enum: [owner, operator, viewer]
         token_hint:
           type: string
+        last_used_at:
+          type: [string, "null"]
+          format: date-time
+        revoked_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        token:
+          type: string
+    WorkflowResponse:
+      type: object
+      required:
+        - workflow
+      additionalProperties: false
+      properties:
+        workflow:
+          $ref: "#/components/schemas/Workflow"
+    WorkflowWithVersionsResponse:
+      type: object
+      required:
+        - workflow
+      additionalProperties: false
+      properties:
+        workflow:
+          $ref: "#/components/schemas/WorkflowWithVersions"
+    WorkflowListResponse:
+      type: object
+      required:
+        - workflows
+      additionalProperties: false
+      properties:
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workflow"
+    Workflow:
+      type: object
+      required:
+        - id
+        - organization_id
+        - name
+        - slug
+        - status
+        - description
+        - created_at
+        - updated_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        organization_id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, archived]
+        description:
+          type: [string, "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    WorkflowWithVersions:
+      type: object
+      required:
+        - id
+        - organization_id
+        - name
+        - slug
+        - status
+        - description
+        - created_at
+        - updated_at
+        - versions
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        organization_id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, archived]
+        description:
+          type: [string, "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowVersion"
+    WorkflowVersionListResponse:
+      type: object
+      required:
+        - workflow_versions
+      additionalProperties: false
+      properties:
+        workflow_versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowVersion"
+    WorkflowVersionResponse:
+      type: object
+      required:
+        - workflow_version
+      additionalProperties: false
+      properties:
+        workflow_version:
+          $ref: "#/components/schemas/WorkflowVersionWithGraph"
+    PublishWorkflowVersionResponse:
+      type: object
+      required:
+        - workflow_version
+        - webhook_secret
+      additionalProperties: false
+      properties:
+        workflow_version:
+          $ref: "#/components/schemas/WorkflowVersionWithGraph"
+        webhook_secret:
+          type: string
+    WorkflowVersion:
+      type: object
+      required:
+        - id
+        - workflow_id
+        - version_number
+        - trigger_key
+        - graph_checksum
+        - retry_policy
+        - published_at
+        - created_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_id:
+          type: integer
+        version_number:
+          type: integer
+        trigger_key:
+          type: string
+        graph_checksum:
+          type: string
+        retry_policy:
+          $ref: "#/components/schemas/RetryPolicy"
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    WorkflowVersionWithGraph:
+      type: object
+      required:
+        - id
+        - workflow_id
+        - version_number
+        - trigger_key
+        - graph_checksum
+        - retry_policy
+        - published_at
+        - created_at
+        - graph
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_id:
+          type: integer
+        version_number:
+          type: integer
+        trigger_key:
+          type: string
+        graph_checksum:
+          type: string
+        retry_policy:
+          $ref: "#/components/schemas/RetryPolicy"
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        graph:
+          $ref: "#/components/schemas/WorkflowGraph"
+    RetryPolicy:
+      type: object
+      required:
+        - max_attempts
+        - base_delay_seconds
+        - jitter_seconds
+      additionalProperties: false
+      properties:
+        max_attempts:
+          type: integer
+        base_delay_seconds:
+          type: integer
+        jitter_seconds:
+          type: integer
+    WebhookIngestionResponse:
+      type: object
+      required:
+        - webhook_event
+        - workflow_execution
+        - duplicate
+      additionalProperties: false
+      properties:
+        webhook_event:
+          $ref: "#/components/schemas/WebhookEvent"
+        workflow_execution:
+          type:
+            - object
+            - "null"
+          properties:
+            id:
+              type: integer
+            workflow_id:
+              type: integer
+            workflow_version_id:
+              type: integer
+            webhook_event_id:
+              type: [integer, "null"]
+            status:
+              type: string
+              enum: [queued, running, retrying, succeeded, failed, canceled]
+            attempt_count:
+              type: integer
+            idempotency_key:
+              type: string
+            correlation_id:
+              type: string
+            error:
+              type: [object, "null"]
+              additionalProperties: true
+            started_at:
+              type: [string, "null"]
+              format: date-time
+            completed_at:
+              type: [string, "null"]
+              format: date-time
+            duration_ms:
+              type: [integer, "null"]
+            created_at:
+              type: string
+              format: date-time
+          required:
+            - id
+            - workflow_id
+            - workflow_version_id
+            - webhook_event_id
+            - status
+            - attempt_count
+            - idempotency_key
+            - correlation_id
+            - error
+            - started_at
+            - completed_at
+            - duration_ms
+            - created_at
+          additionalProperties: false
+        duplicate:
+          type: boolean
+    WebhookEvent:
+      type: object
+      required:
+        - id
+        - workflow_version_id
+        - idempotency_key
+        - source_event_id
+        - status
+        - correlation_id
+        - received_at
+        - execution_id
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_version_id:
+          type: integer
+        idempotency_key:
+          type: string
+        source_event_id:
+          type: [string, "null"]
+        status:
+          type: string
+          enum: [accepted, duplicate, rejected]
+        correlation_id:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+        execution_id:
+          type: [integer, "null"]
+    WorkflowExecutionListResponse:
+      type: object
+      required:
+        - workflow_executions
+      additionalProperties: false
+      properties:
+        workflow_executions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowExecution"
+    WorkflowExecutionResponse:
+      type: object
+      required:
+        - workflow_execution
+      additionalProperties: false
+      properties:
+        workflow_execution:
+          $ref: "#/components/schemas/WorkflowExecutionWithNodes"
+    WorkflowExecutionRetryResponse:
+      type: object
+      required:
+        - workflow_execution
+      additionalProperties: false
+      properties:
+        workflow_execution:
+          $ref: "#/components/schemas/WorkflowExecution"
+    WorkflowExecution:
+      type: object
+      required:
+        - id
+        - workflow_id
+        - workflow_version_id
+        - webhook_event_id
+        - status
+        - attempt_count
+        - idempotency_key
+        - correlation_id
+        - error
+        - started_at
+        - completed_at
+        - duration_ms
+        - created_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_id:
+          type: integer
+        workflow_version_id:
+          type: integer
+        webhook_event_id:
+          type: [integer, "null"]
+        status:
+          type: string
+          enum: [queued, running, retrying, succeeded, failed, canceled]
+        attempt_count:
+          type: integer
+        idempotency_key:
+          type: string
+        correlation_id:
+          type: string
+        error:
+          type: [object, "null"]
+          additionalProperties: true
+        started_at:
+          type: [string, "null"]
+          format: date-time
+        completed_at:
+          type: [string, "null"]
+          format: date-time
+        duration_ms:
+          type: [integer, "null"]
+        created_at:
+          type: string
+          format: date-time
+    WorkflowExecutionWithNodes:
+      type: object
+      required:
+        - id
+        - workflow_id
+        - workflow_version_id
+        - webhook_event_id
+        - status
+        - attempt_count
+        - idempotency_key
+        - correlation_id
+        - error
+        - started_at
+        - completed_at
+        - duration_ms
+        - created_at
+        - nodes
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_id:
+          type: integer
+        workflow_version_id:
+          type: integer
+        webhook_event_id:
+          type: [integer, "null"]
+        status:
+          type: string
+          enum: [queued, running, retrying, succeeded, failed, canceled]
+        attempt_count:
+          type: integer
+        idempotency_key:
+          type: string
+        correlation_id:
+          type: string
+        error:
+          type: [object, "null"]
+          additionalProperties: true
+        started_at:
+          type: [string, "null"]
+          format: date-time
+        completed_at:
+          type: [string, "null"]
+          format: date-time
+        duration_ms:
+          type: [integer, "null"]
+        created_at:
+          type: string
+          format: date-time
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeExecution"
+    NodeExecution:
+      type: object
+      required:
+        - id
+        - node_key
+        - node_type
+        - status
+        - attempt
+        - input
+        - output
+        - error
+        - duration_ms
+        - started_at
+        - completed_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        node_key:
+          type: string
+        node_type:
+          type: string
+        status:
+          type: string
+          enum: [running, succeeded, failed, skipped]
+        attempt:
+          type: integer
+        input:
+          type: object
+          additionalProperties: true
+        output:
+          type: [object, "null"]
+          additionalProperties: true
+        error:
+          type: [object, "null"]
+          additionalProperties: true
+        duration_ms:
+          type: [integer, "null"]
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: [string, "null"]
+          format: date-time
+    DeadLetterListResponse:
+      type: object
+      required:
+        - dead_letters
+      additionalProperties: false
+      properties:
+        dead_letters:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeadLetter"
+    DeadLetterResponse:
+      type: object
+      required:
+        - dead_letter
+      additionalProperties: false
+      properties:
+        dead_letter:
+          $ref: "#/components/schemas/DeadLetter"
+    DeadLetterRetryResponse:
+      type: object
+      required:
+        - dead_letter
+        - workflow_execution
+      additionalProperties: false
+      properties:
+        dead_letter:
+          $ref: "#/components/schemas/DeadLetter"
+        workflow_execution:
+          $ref: "#/components/schemas/WorkflowExecution"
+    DeadLetter:
+      type: object
+      required:
+        - id
+        - workflow_execution_id
+        - node_execution_id
+        - status
+        - reason
+        - retry_count
+        - payload
+        - resolved_at
+        - created_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        workflow_execution_id:
+          type: integer
+        node_execution_id:
+          type: [integer, "null"]
+        status:
+          type: string
+          enum: [open, retried, resolved]
+        reason:
+          type: string
+        retry_count:
+          type: integer
+        payload:
+          type: object
+          additionalProperties: true
+        resolved_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    CredentialListResponse:
+      type: object
+      required:
+        - credentials
+      additionalProperties: false
+      properties:
+        credentials:
+          type: array
+          items:
+            $ref: "#/components/schemas/Credential"
+    CredentialResponse:
+      type: object
+      required:
+        - credential
+      additionalProperties: false
+      properties:
+        credential:
+          $ref: "#/components/schemas/Credential"
+    Credential:
+      type: object
+      required:
+        - id
+        - name
+        - kind
+        - masked_secret
+        - metadata
+        - last_used_at
+        - created_at
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [api_key, bearer_token, basic_auth, webhook_secret]
+        masked_secret:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        last_used_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
     WorkflowNode:
       type: object
       required:
         - key
         - type
+      additionalProperties: false
       properties:
         key:
           type: string
@@ -440,18 +1218,31 @@ components:
         config:
           type: object
           additionalProperties: true
+    WorkflowGraph:
+      type: object
+      required:
+        - nodes
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowNode"
+      additionalProperties: true
     ErrorResponse:
       type: object
       required:
         - error
+      additionalProperties: false
       properties:
         error:
           type: object
           required:
             - code
             - message
+            - details
             - request_id
             - correlation_id
+          additionalProperties: false
           properties:
             code:
               type: string
