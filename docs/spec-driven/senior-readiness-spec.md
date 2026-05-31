@@ -85,12 +85,16 @@ CI must cover lint, security, tests, OpenAPI validation, Docker build, and cover
 | Repository docs are tested | `test/repository_spec_compliance_test.rb` | Done | Verifies required docs and event schemas. |
 | Test strategy is documented | `docs/testing-strategy.md`, `bin/ci` | Done | Minitest, fixtures, system tests, CI, and release checks are explicit. |
 | CI passes | `.github/workflows/ci.yml`, `bin/ci` | Done | Recorded in verification report. |
+| HTTP connector executes real requests | `app/services/flow_bridge/http_client.rb`, `test/services/node_executor_test.rb` | Done | Uses loopback HTTP in tests; no third-party service dependency. |
+| Workflow graph is validated before publication | `app/services/flow_bridge/workflow_graph_validator.rb`, `test/models/workflow_version_test.rb` | Done | Rejects invalid node shape, HTTP config, filter config, trigger placement, and retry policy. |
+| Duplicate execution attempts are guarded | `app/services/flow_bridge/execution_runner.rb`, `test/services/execution_runner_test.rb` | Done | Recent running executions are treated as active leases. |
+| Rate limits use atomic increments | `app/services/flow_bridge/rate_limiter.rb`, `test/integration/rate_limiting_and_metrics_test.rb` | Done | API key limit and public bootstrap limit share the limiter. |
+| Public bootstrap has abuse controls | `app/controllers/api/v1/organizations_controller.rb`, `openapi.yaml`, `test/integration/rate_limiting_and_metrics_test.rb` | Done | IP/hour cap and client-supplied plan/limit ignored. |
 
 ## Out of Scope
 
 - Visual workflow graph editor.
 - OAuth connector lifecycle and credential rotation UI.
-- Real external HTTP connector execution.
 - Full Event Sourcing for execution history.
 - RabbitMQ or broker-native DLQ adoption.
 - Kubernetes, service mesh, and multi-region deployment.

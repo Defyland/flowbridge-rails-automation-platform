@@ -62,7 +62,7 @@ Coverage is useful as a regression signal, not as a substitute for behavioral te
 
 ## What Is Intentionally Not Tested Yet
 
-- Real third-party connector calls; the MVP simulates node execution.
+- Third-party SaaS contract tests; HTTP connector behavior is real and covered through a local loopback server.
 - Production Kamal deployment against an actual VPS/cloud host.
 - Browser coverage for every operator action; the current system test is a smoke-level console check.
 - Long-running k6 benchmark results; scripts and methodology exist, but stable p50/p95/p99 captures still need a long-lived app server run.

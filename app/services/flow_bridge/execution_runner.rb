@@ -1,5 +1,7 @@
 module FlowBridge
   class ExecutionRunner
+    RUNNING_LEASE_TTL = 15.minutes
+
     def initialize(execution)
       @execution = execution
       @workflow_version = execution.workflow_version
@@ -7,12 +9,12 @@ module FlowBridge
     end
 
     def call
-      return execution if execution.status == "succeeded" || execution.status == "canceled"
-
       Current.organization = organization
       Current.correlation_id = execution.correlation_id
 
       attempt = start_attempt!
+      return execution.reload unless attempt
+
       previous_outputs = successful_outputs
 
       workflow_version.nodes.each do |node|
@@ -59,6 +61,8 @@ module FlowBridge
     def start_attempt!
       execution.with_lock do
         execution.reload
+        return if terminal_or_active?
+
         execution.update!(
           status: "running",
           started_at: execution.started_at || Time.current,
@@ -66,6 +70,12 @@ module FlowBridge
         )
         execution.attempt_count
       end
+    end
+
+    def terminal_or_active?
+      return true if execution.terminal?
+
+      execution.status == "running" && execution.updated_at > RUNNING_LEASE_TTL.ago
     end
 
     def node_input(previous_outputs)

@@ -29,7 +29,7 @@ if workflow.workflow_versions.none?
       nodes: [
         { key: "incoming_webhook", type: "webhook_trigger", config: {} },
         { key: "normalize", type: "transform", config: { mapping: { email: "$.email" } } },
-        { key: "sync_crm", type: "http_request", config: { method: "POST", url: "mock://crm/contacts" } }
+        { key: "sync_crm", type: "http_request", config: { method: "POST", url: "https://crm.internal.example/contacts", timeout_seconds: 5 } }
       ]
     },
     retry_policy: { max_attempts: 3, base_delay_seconds: 30, jitter_seconds: 10 }

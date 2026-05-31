@@ -2,21 +2,30 @@
 
 ## Summary
 
-Verified on 2026-05-30 against the local repository state after the spec-driven documentation pass.
+Verified on 2026-05-31 against the local repository state after the tech-lead hardening pass.
 
-The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, and readiness documentation mapped to the senior-quality rubric. The code-facing compliance test was extended so these docs and event schemas stay visible to CI.
+The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, graph validation, duplicate-execution guarding, atomic rate limiting, and public bootstrap abuse controls.
 
 ## Commands Run
 
-- `bin/rails test test/repository_spec_compliance_test.rb`
+- `bin/rails test test/services/node_executor_test.rb test/services/execution_runner_test.rb test/models/workflow_version_test.rb test/integration/rate_limiting_and_metrics_test.rb`
   - Result: passed.
-  - Evidence: 3 runs, 110 assertions, 0 failures, 0 errors, 0 skips.
-- Markdown relative-link validation script over `README.md`, `docs/**/*.md`, and `benchmarks/**/*.md`
+  - Evidence: 12 runs, 52 assertions, 0 failures, 0 errors, 0 skips.
+- `bin/rails test test/integration/api_workflow_lifecycle_test.rb test/jobs/workflow_execution_job_test.rb test/integration/webhook_failure_scenarios_test.rb`
   - Result: passed.
-  - Evidence: `Markdown relative links: OK`.
-- `ruby -rjson -e 'Dir["docs/events/*.json"].sort.each { |file| JSON.parse(File.read(file)); puts "#{file}: OK" }'`
+  - Evidence: 4 runs, 21 assertions, 0 failures, 0 errors, 0 skips.
+- `bin/rails test:all`
   - Result: passed.
-  - Evidence: all five workflow event schema files parsed as JSON.
+  - Evidence: 37 runs, 250 assertions, 0 failures, 0 errors, 0 skips, 78.46% line coverage.
+- `bin/rubocop -f simple`
+  - Result: passed.
+  - Evidence: 97 files inspected, no offenses detected.
+- `bin/brakeman --no-pager`
+  - Result: passed.
+  - Evidence: 0 security warnings.
+- `bin/bundler-audit`
+  - Result: passed.
+  - Evidence: no vulnerabilities found.
 - `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); YAML.load_file(".github/workflows/deploy.yml"); YAML.load_file("openapi.yaml"); puts "YAML parse: OK"'`
   - Result: passed.
   - Evidence: CI, deploy, and OpenAPI YAML parsed.
@@ -25,8 +34,8 @@ The repository now has explicit product, domain, architecture, security, scalabi
   - Evidence: `openapi.yaml: validated`.
 - `bin/ci`
   - Result: passed.
-  - Evidence: setup, RuboCop, Bundler Audit, Brakeman, OpenAPI parse, Rails tests, and seed replant all passed in 18.27s.
-  - Rails test evidence inside CI: 31 runs, 220 assertions, 0 failures, 0 errors, 0 skips, 86.27% line coverage.
+  - Evidence: setup, RuboCop, Bundler Audit, Brakeman, OpenAPI parse, Rails tests, and seed replant all passed in 24.84s.
+  - Rails test evidence inside CI: 37 runs, 250 assertions, 0 failures, 0 errors, 0 skips, 86.0% line coverage.
 - `bin/rails test:system`
   - Result: passed.
   - Evidence: 1 run, 3 assertions, 0 failures, 0 errors, 0 skips.
@@ -38,6 +47,7 @@ The repository now has explicit product, domain, architecture, security, scalabi
 
 - Required spec-driven files exist:
   - `docs/spec-driven/senior-readiness-spec.md`
+  - `docs/spec-driven/techlead-hardening-spec.md`
   - `docs/spec-driven/implementation-plan.md`
   - `docs/spec-driven/verification-report.md`
 - Product documentation covers problem, personas, use cases, non-goals, roadmap, and pricing posture.
@@ -49,10 +59,15 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - Event documentation covers workflow, execution, node, webhook, and DLQ events with idempotency by `event_id`, `source`, and `workflow_id`.
 - ADRs capture irreversible workflow-version decisions and event sourcing as a future option rather than an MVP dependency.
 - CI-facing repository compliance now checks required documentation directories/files and parseable event schemas.
+- HTTP connector execution is real and tested against a local loopback endpoint.
+- Workflow graph and retry policy validation reject invalid configs before publication.
+- Duplicate worker execution is guarded by a recent-running execution lease.
+- API key and public bootstrap rate limits use the shared atomic limiter.
+- Public organization creation is abuse-limited and no longer accepts client-supplied plan or rate-limit escalation.
 
 ## Partial Criteria
 
-- Measured benchmark results remain partial until k6 runs are captured against a long-lived app server.
+- Measured k6 benchmark results remain partial until k6 runs are captured against a long-lived app server.
 - Manual Kamal deployment remains unexecuted until production secrets and target hosts are configured.
 - Backup/restore and DLQ replay drills are documented, but not executed in this local pass.
 

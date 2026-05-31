@@ -6,10 +6,17 @@
 - Webhook ingestion persists `WebhookEvent` and `WorkflowExecution` in one transaction before enqueueing work.
 - Workflow execution writes each `NodeExecution` before calling a node and updates it after success or failure.
 - Dead-letter creation is part of terminal failure handling.
+- Workflow execution start uses a row lock and an active-running guard so duplicate jobs do not create simultaneous attempts.
 
 ## Idempotency
 
 Webhook idempotency is enforced by a unique index on `[workflow_version_id, idempotency_key]`. Workflow execution idempotency has the same unique boundary. Duplicate webhook submissions return the original execution without enqueueing duplicate work.
+
+Execution idempotency also protects the worker side. If a duplicate job sees a recent `running` execution, it exits without creating another attempt. Manual retry must first move the execution back to `queued`.
+
+## Rate-limit consistency
+
+API key and public bootstrap rate limits use `Rails.cache.increment` behind `FlowBridge::RateLimiter`, with a synchronized fallback for stores that do not implement atomic increments. The production target is a cache backend with atomic increment support; the fallback keeps local/test behavior deterministic.
 
 ## Immutable execution input
 

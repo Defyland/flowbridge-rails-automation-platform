@@ -16,6 +16,26 @@ class RateLimitingAndMetricsTest < ActionDispatch::IntegrationTest
     assert_equal "rate_limited", json_response.dig("error", "code")
   end
 
+  test "rate limits public organization bootstrap and ignores client supplied plan limits" do
+    with_env("FLOWBRIDGE_BOOTSTRAP_ORG_LIMIT_PER_HOUR" => "1") do
+      post "/api/v1/organizations",
+        params: { organization: { name: "Bootstrap One", plan: "enterprise", rate_limit_per_minute: 10_000 } },
+        as: :json
+
+      assert_response :created
+      organization_id = json_response.dig("organization", "id")
+      assert_equal "launch", Organization.find(organization_id).plan
+      assert_equal 120, Organization.find(organization_id).rate_limit_per_minute
+
+      post "/api/v1/organizations",
+        params: { organization: { name: "Bootstrap Two" } },
+        as: :json
+
+      assert_response :too_many_requests
+      assert_equal "rate_limited", json_response.dig("error", "code")
+    end
+  end
+
   test "exports prometheus metrics for executions, events, and dead letters" do
     organization, = create_organization_with_key
     version = publish_workflow_version(organization: organization)

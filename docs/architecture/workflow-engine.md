@@ -17,6 +17,8 @@ The engine must not depend on controller state, browser sessions, or mutable wor
 - A node result must be recorded before the execution advances to the next node.
 - A terminal failure must be visible as a `DeadLetter` unless the failure was resolved by successful retry.
 - Secret-bearing values must be masked before they cross the execution evidence boundary.
+- A recently `running` execution is treated as actively leased; duplicate jobs must not start a second attempt.
+- HTTP connector nodes must use validated `http` or `https` URLs and explicit timeout budgets.
 
 ## Event taxonomy
 
@@ -29,6 +31,10 @@ The engine emits or records semantic events in these families:
 - dead-letter events: created, retried, and resolved semantics
 
 The current MVP stores these facts in relational records. Future external consumers should rely on the contracts in [../events/README.md](../events/README.md), not on database table shapes.
+
+## Connector execution
+
+`http_request` nodes execute through `FlowBridge::HttpClient`, which uses real `Net::HTTP` requests with bounded open/read/write timeouts. Tests use loopback HTTP endpoints so CI proves connector behavior without depending on internet access or third-party systems. Non-2xx responses are classified as retriable for transient HTTP status codes and permanent for client/configuration failures.
 
 ## Idempotency boundaries
 

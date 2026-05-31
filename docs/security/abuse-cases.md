@@ -72,3 +72,14 @@ Controls:
 - retry caps
 - dead-letter visibility
 - planned retention and alert thresholds
+
+## Public tenant bootstrap abuse
+
+Attempt: attacker repeatedly creates organizations to mint owner API keys or self-assigns a high plan/rate limit.
+
+Controls:
+
+- IP/hour bootstrap rate limit before organization creation
+- public create permits only organization name and slug
+- plan and API rate limits stay server-controlled
+- audit log for bootstrap creation

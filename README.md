@@ -33,9 +33,11 @@ Webhook automation often fails in production because payloads are duplicated, wo
 
 - Multi-tenant organizations with API key roles: owner, operator, and viewer.
 - Immutable workflow versions with graph checksums and per-version webhook secrets.
+- Fail-fast workflow graph validation for node shape, HTTP connector config, and retry policy.
 - Signed webhook ingestion with idempotency keys and correlation ID propagation.
-- Async workflow execution through Active Job with retry, exponential backoff, and dead-letter creation.
+- Async workflow execution through Active Job with duplicate-attempt guards, retry, exponential backoff, and dead-letter creation.
 - Node-level execution evidence including input, output, duration, error code, and attempt number.
+- Real outbound HTTP connector execution with bounded timeouts and secret-safe evidence.
 - Encrypted credential storage with secret-safe response masking.
 - Operator endpoints for execution inspection, manual retry, dead-letter retry, and dead-letter resolution.
 - JSON structured logs, request IDs, correlation IDs, readiness checks, and Prometheus metrics.

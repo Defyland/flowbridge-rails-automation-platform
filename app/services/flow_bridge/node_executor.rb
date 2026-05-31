@@ -1,3 +1,5 @@
+require "base64"
+
 module FlowBridge
   class NodeExecutor
     class ExecutionError < StandardError
@@ -82,11 +84,20 @@ module FlowBridge
 
     def http_request
       url = config.fetch("url")
-      method = config.fetch("method", "POST").upcase
-      headers = config.fetch("headers", {})
+      method = config.fetch("method", "POST").to_s.upcase
+      timeout_seconds = config.fetch("timeout_seconds", 5)
       credential = find_credential
 
-      raise_http_error(url) if url.start_with?("mock://fail")
+      headers = credential_headers(config.fetch("headers", {}).dup, credential)
+      response = FlowBridge::HttpClient.request(
+        url: url,
+        method: method,
+        headers: headers,
+        body: config.fetch("body", input),
+        timeout_seconds: timeout_seconds
+      )
+
+      raise_http_error(url, response) unless response.success?
 
       {
         "request" => {
@@ -96,10 +107,26 @@ module FlowBridge
           "credential" => credential&.then { |item| { "id" => item.id, "name" => item.name, "secret" => item.masked_secret } }
         }.compact,
         "response" => {
-          "status" => url.start_with?("mock://") ? 202 : 200,
-          "body" => { "accepted" => true, "id" => SecureRandom.uuid }
+          "status" => response.status,
+          "headers" => SecretMasker.mask_hash(response.headers),
+          "body" => SecretMasker.mask_hash(response.body),
+          "duration_ms" => response.duration_ms
         }
       }
+    rescue FlowBridge::HttpClient::TimeoutError, FlowBridge::HttpClient::ConnectionError => error
+      raise ExecutionError.new(
+        "http_transient_failure",
+        error.message,
+        retriable: true,
+        details: error.details
+      )
+    rescue FlowBridge::HttpClient::InvalidRequestError => error
+      raise ExecutionError.new(
+        "http_invalid_request",
+        error.message,
+        retriable: false,
+        details: error.details
+      )
     end
 
     def emit_event
@@ -123,13 +150,31 @@ module FlowBridge
       )
     end
 
-    def raise_http_error(url)
-      retriable = url.include?("transient") || url.include?("timeout")
+    def credential_headers(headers, credential = nil)
+      return headers unless credential
+
+      case credential.kind
+      when "bearer_token"
+        headers["Authorization"] ||= "Bearer #{credential.secret}"
+      when "api_key"
+        header_name = credential.metadata_json["header_name"].presence || "X-API-Key"
+        headers[header_name] ||= credential.secret
+      when "basic_auth"
+        headers["Authorization"] ||= "Basic #{Base64.strict_encode64(credential.secret)}"
+      when "webhook_secret"
+        headers["X-Webhook-Secret"] ||= credential.secret
+      end
+
+      headers
+    end
+
+    def raise_http_error(url, response)
+      retriable = FlowBridge::HttpClient.retriable_status?(response.status)
       raise ExecutionError.new(
         retriable ? "http_transient_failure" : "http_permanent_failure",
-        "simulated HTTP failure for #{url}",
+        "HTTP request to #{url} failed with status #{response.status}",
         retriable: retriable,
-        details: { url: url }
+        details: { url: url, status: response.status, response: response.body }
       )
     end
 

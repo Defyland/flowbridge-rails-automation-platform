@@ -5,7 +5,7 @@
 ```bash
 curl -s http://localhost:3000/api/v1/organizations \
   -H "Content-Type: application/json" \
-  -d '{"organization":{"name":"Demo Ops","rate_limit_per_minute":120}}'
+  -d '{"organization":{"name":"Demo Ops"}}'
 ```
 
 The response includes a one-time `api_key.token`. Store it as an environment variable:
@@ -36,7 +36,7 @@ curl -s http://localhost:3000/api/v1/workflows/1/versions \
         "nodes": [
           { "key": "incoming_webhook", "type": "webhook_trigger", "config": {} },
           { "key": "normalize", "type": "transform", "config": { "mapping": { "email": "$.email" } } },
-          { "key": "sync_crm", "type": "http_request", "config": { "method": "POST", "url": "mock://crm/contacts" } }
+          { "key": "sync_crm", "type": "http_request", "config": { "method": "POST", "url": "https://crm.internal.example/contacts", "timeout_seconds": 5 } }
         ]
       }
     }

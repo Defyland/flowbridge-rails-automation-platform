@@ -3,11 +3,12 @@ import { check } from "k6";
 import { hmac } from "k6/crypto";
 
 export const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
+export const CONNECTOR_URL = __ENV.CONNECTOR_URL || `${BASE_URL}/up`;
 
 export function setupFlowBridge() {
   const org = http.post(
     `${BASE_URL}/api/v1/organizations`,
-    JSON.stringify({ organization: { name: `k6-${Date.now()}`, rate_limit_per_minute: 100000 } }),
+    JSON.stringify({ organization: { name: `k6-${Date.now()}` } }),
     { headers: { "Content-Type": "application/json" } },
   );
   check(org, { "organization created": (res) => res.status === 201 });
@@ -34,7 +35,7 @@ export function setupFlowBridge() {
           nodes: [
             { key: "incoming_webhook", type: "webhook_trigger", config: {} },
             { key: "normalize", type: "transform", config: { mapping: { email: "$.email" } } },
-            { key: "sync_crm", type: "http_request", config: { method: "POST", url: "mock://crm/contacts" } },
+            { key: "sync_crm", type: "http_request", config: { method: "GET", url: CONNECTOR_URL, timeout_seconds: 5 } },
           ],
         },
       },

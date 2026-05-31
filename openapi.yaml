@@ -326,12 +326,6 @@ components:
               type: string
             slug:
               type: string
-            plan:
-              type: string
-              enum: [launch, scale, enterprise]
-            rate_limit_per_minute:
-              type: integer
-              minimum: 1
     CreateOrganizationResponse:
       type: object
       properties:

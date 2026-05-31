@@ -2,7 +2,7 @@
 
 ## Scope
 
-Apply the shared senior engineering and spec-driven standards to FlowBridge without changing the product runtime beyond minimal test coverage for documentation conformance. The work is documentation-first and evidence-driven.
+Apply the shared senior engineering and spec-driven standards to FlowBridge and close the production-near gaps found in the senior review. The work is spec-first and evidence-driven: runtime behavior changes must have tests and documentation.
 
 ## Files to Create or Update
 
@@ -22,6 +22,10 @@ Apply the shared senior engineering and spec-driven standards to FlowBridge with
 | `docs/operational-cost.md` | Operational cost and simpler alternatives. |
 | `README.md` | Link to case study, spec-driven evidence, and new docs. |
 | `test/repository_spec_compliance_test.rb` | Guard required docs and event schemas. |
+| `app/services/flow_bridge/http_client.rb` | Real outbound HTTP connector with timeouts and safe response capture. |
+| `app/services/flow_bridge/workflow_graph_validator.rb` | Fail-fast graph and retry-policy validation. |
+| `app/services/flow_bridge/rate_limiter.rb` | Atomic cache-backed rate limit primitive with fallback. |
+| `test/services/node_executor_test.rb` | Loopback HTTP proof for connector behavior and masking. |
 
 ## Acceptance Criteria Mapping
 
@@ -37,6 +41,9 @@ Apply the shared senior engineering and spec-driven standards to FlowBridge with
 | Spec-driven workflow is auditable | Add the three required files under `docs/spec-driven/`. |
 | Docs match system behavior | Update `test/repository_spec_compliance_test.rb` to assert mandatory docs and parse event schemas. |
 | Verification is reproducible | Run local docs checks, JSON/YAML parsing, Redocly, and `bin/ci`; record results. |
+| HTTP connector is production-near | Replace mock-only behavior with `Net::HTTP`, timeouts, status classification, credential headers, and loopback tests. |
+| Graph config fails fast | Validate node shape, trigger position, HTTP URL/method/headers/timeout, filter config, and retry policy. |
+| Abuse controls are explicit | Add atomic API key rate limiting and IP/hour bootstrap limiting; remove public plan/rate-limit assignment. |
 
 ## Verification Commands
 
@@ -60,6 +67,6 @@ docker build -t flowbridge:test .
 ## Deferred Work
 
 - Capture k6 results from a stable local or staging environment and store summaries in `benchmarks/results/`.
-- Add real connector adapters and idempotency-key propagation to external HTTP calls.
+- Add connector-specific auth adapters, outbound idempotency-key propagation, and vendor contract tests.
 - Add alert thresholds for queue depth, dead-letter growth, and signature failures.
 - Add production backup/restore drill evidence.

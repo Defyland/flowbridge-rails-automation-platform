@@ -50,6 +50,7 @@ class RepositorySpecComplianceTest < ActiveSupport::TestCase
       docs/operational-cost.md
       docs/testing-strategy.md
       docs/spec-driven/senior-readiness-spec.md
+      docs/spec-driven/techlead-hardening-spec.md
       docs/spec-driven/implementation-plan.md
       docs/spec-driven/verification-report.md
       docs/product/problem.md

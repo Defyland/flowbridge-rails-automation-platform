@@ -3,6 +3,7 @@ module Api
     class OrganizationsController < Api::BaseController
       skip_before_action :authenticate_api_key!, only: :create
       skip_before_action :enforce_rate_limit!, only: :create
+      before_action :enforce_bootstrap_rate_limit!, only: :create
 
       def create
         organization = nil
@@ -43,7 +44,16 @@ module Api
       private
 
       def organization_params
-        params.require(:organization).permit(:name, :slug, :plan, :rate_limit_per_minute)
+        params.require(:organization).permit(:name, :slug)
+      end
+
+      def enforce_bootstrap_rate_limit!
+        limit = ENV.fetch("FLOWBRIDGE_BOOTSTRAP_ORG_LIMIT_PER_HOUR", 5).to_i
+        return if limit <= 0
+
+        bucket = "bootstrap-organization:#{request.remote_ip}:#{Time.current.utc.strftime("%Y%m%d%H")}"
+        result = FlowBridge::RateLimiter.increment(bucket: bucket, limit: limit, expires_in: 65.minutes)
+        raise TooManyRequests, "organization bootstrap exceeded #{limit} requests per hour" if result.exceeded?
       end
     end
   end

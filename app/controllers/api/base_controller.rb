@@ -59,9 +59,8 @@ module Api
 
       limit = Current.organization.rate_limit_per_minute
       bucket = "rate-limit:#{Current.api_key.id}:#{Time.current.utc.strftime("%Y%m%d%H%M")}"
-      count = Rails.cache.read(bucket).to_i + 1
-      Rails.cache.write(bucket, count, expires_in: 70.seconds)
-      raise TooManyRequests, "API key exceeded #{limit} requests per minute" if count > limit
+      result = FlowBridge::RateLimiter.increment(bucket: bucket, limit: limit, expires_in: 70.seconds)
+      raise TooManyRequests, "API key exceeded #{limit} requests per minute" if result.exceeded?
     end
 
     def require_permission!(permission)

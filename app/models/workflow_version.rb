@@ -13,7 +13,7 @@ class WorkflowVersion < ApplicationRecord
   validates :trigger_key, presence: true, uniqueness: true
   validates :webhook_secret_ciphertext, presence: true
   validates :graph_checksum, presence: true
-  validate :graph_shape
+  validate :graph_contract
 
   def nodes
     graph_json.fetch("nodes", [])
@@ -73,15 +73,9 @@ class WorkflowVersion < ApplicationRecord
     throw :abort
   end
 
-  def graph_shape
-    unless graph_json.is_a?(Hash) && graph_json["nodes"].is_a?(Array)
-      errors.add(:graph_json, "must contain a nodes array")
-      return
+  def graph_contract
+    FlowBridge::WorkflowGraphValidator.call(graph: graph_json, retry_policy: retry_policy_json).issues.each do |issue|
+      errors.add(issue.attribute, issue.message)
     end
-
-    node_keys = graph_json["nodes"].filter_map { |node| node["key"] if node.is_a?(Hash) }
-    errors.add(:graph_json, "nodes must have unique keys") if node_keys.uniq.size != node_keys.size
-    errors.add(:graph_json, "must include at least one node") if node_keys.empty?
-    errors.add(:graph_json, "must include a webhook_trigger node") unless graph_json["nodes"].any? { |node| node["type"] == "webhook_trigger" }
   end
 end
