@@ -30,7 +30,7 @@ jobs:
         with:
           bundler-cache: true
 
-      - uses: webfactory/ssh-agent@v0.9.1
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
 
