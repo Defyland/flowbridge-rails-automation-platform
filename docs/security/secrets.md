@@ -5,7 +5,9 @@
 - Rails credentials for framework-level encrypted configuration.
 - Environment variables for deploy-time secrets.
 - GitHub repository secrets for CI/CD deployment.
-- `.kamal/secrets` references environment variables; it does not contain raw production values.
+- `.kamal/secrets.sample` is the tracked template; the real local `.kamal/secrets`
+  file stays ignored and should only reference environment variables or local
+  secret sources.
 
 ## Application secrets
 

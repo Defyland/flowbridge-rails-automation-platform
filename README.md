@@ -80,7 +80,7 @@ See [docs/architecture/overview.md](docs/architecture/overview.md) and [docs/dia
 - OpenTelemetry instrumentation hooks
 - Prometheus text metrics
 - k6 benchmark scripts
-- Docker, Thruster, Kamal, and GitHub Actions
+- Docker, Thruster, Kamal, Railway, and GitHub Actions
 
 ## Domain model
 
@@ -229,6 +229,12 @@ And these repository secrets:
 - `QUEUE_DATABASE_URL`
 - `CACHE_DATABASE_URL`
 - `CABLE_DATABASE_URL`
+
+For public demo and reviewer evaluation, there is also a lighter Railway
+single-service path documented in [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) and
+[ADR 005](docs/adr/005-railway-single-service-demo.md). That path keeps the
+current app runnable without inventing a second Docker layout, but it is still a
+demo topology rather than the final multi-process production split.
 
 ## Failure scenarios
 
