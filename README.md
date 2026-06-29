@@ -255,3 +255,7 @@ Operational steps are in [docs/runbooks/common-issues.md](docs/runbooks/common-i
 - Add a RabbitMQ adapter while retaining the current database-backed idempotency and audit trail.
 - Add OAuth credential connectors and rotation workflows.
 - Add graph validation for dependencies, fan-out, and conditional branches.
+
+## License
+
+MIT. See [LICENSE.txt](./LICENSE.txt).
