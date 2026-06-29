@@ -7,6 +7,7 @@
 - Workflow execution writes each `NodeExecution` before calling a node and updates it after success or failure.
 - Dead-letter creation is part of terminal failure handling.
 - Workflow execution start uses a row lock and an active-running guard so duplicate jobs do not create simultaneous attempts.
+- A recurring recovery job re-enqueues stale `queued` executions if the primary database commit succeeds but the separate `solid_queue` write fails afterward.
 
 ## Idempotency
 
@@ -38,3 +39,5 @@ API key and public bootstrap rate limits use `Rails.cache.increment` behind `Flo
 ## Rollback strategy
 
 Failed validation rolls back the request transaction. For execution failures, the system does not roll back historical evidence; it records failed node evidence and transitions the execution to `retrying` or `failed`. Manual operator retry creates a new execution attempt while preserving previous node attempts.
+
+Because FlowBridge writes tenant data and queue records through separate database connections in production, enqueue acknowledgement is not part of the same atomic commit as webhook acceptance or manual retry state changes. `RecoverQueuedWorkflowExecutionsJob` scans for `queued` executions older than a small grace period and re-enqueues them. `ExecutionRunner` still holds the running lease, so the recovery path can safely over-enqueue without creating concurrent attempts.

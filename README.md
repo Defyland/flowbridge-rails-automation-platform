@@ -35,7 +35,7 @@ Webhook automation often fails in production because payloads are duplicated, wo
 - Immutable workflow versions with graph checksums and per-version webhook secrets.
 - Fail-fast workflow graph validation for node shape, HTTP connector config, and retry policy.
 - Signed webhook ingestion with idempotency keys and correlation ID propagation.
-- Async workflow execution through Active Job with duplicate-attempt guards, retry, exponential backoff, and dead-letter creation.
+- Async workflow execution through Active Job with duplicate-attempt guards, stale-queue recovery, retry, exponential backoff, and dead-letter creation.
 - Node-level execution evidence including input, output, duration, error code, and attempt number.
 - Real outbound HTTP connector execution with bounded timeouts and secret-safe evidence.
 - Encrypted credential storage with secret-safe response masking.
@@ -103,7 +103,7 @@ All product endpoints are versioned under `/api/v1`. Webhook ingress uses `/api/
 
 ## Async or event architecture
 
-Webhook ingestion persists the event and execution in one database transaction, then enqueues `WorkflowExecutionJob`. The job executes the immutable workflow version node by node. Retriable failures schedule another job according to the version retry policy. Exhausted or non-retriable failures create a `DeadLetter` record. This is documented in [docs/architecture/data-consistency.md](docs/architecture/data-consistency.md) and [docs/architecture/workflow-engine.md](docs/architecture/workflow-engine.md), with event contracts in [docs/events/README.md](docs/events/README.md).
+Webhook ingestion persists the event and execution in one database transaction, then enqueues `WorkflowExecutionJob`. Because the primary application database and `solid_queue` can fail independently, a recurring recovery job re-enqueues stale `queued` executions if the enqueue step fails after commit. The worker still uses a running lease to reject duplicate active attempts. Retriable node failures schedule another job according to the version retry policy. Exhausted or non-retriable failures create a `DeadLetter` record. This is documented in [docs/architecture/data-consistency.md](docs/architecture/data-consistency.md) and [docs/architecture/workflow-engine.md](docs/architecture/workflow-engine.md), with event contracts in [docs/events/README.md](docs/events/README.md).
 
 ## Database design
 

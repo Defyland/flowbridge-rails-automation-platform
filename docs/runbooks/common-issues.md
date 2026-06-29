@@ -18,6 +18,13 @@ This is expected. FlowBridge deduplicates by `[workflow_version_id, idempotency_
 3. If the downstream dependency recovered, use `POST /api/v1/executions/{id}/retry`.
 4. If max attempts are exhausted, inspect `GET /api/v1/dead_letters`.
 
+## Execution is stuck in `queued`
+
+1. Wait for the stale-queue recovery sweep to run. Production re-enqueues `queued` executions automatically after a short grace period.
+2. Inspect `GET /api/v1/executions/{id}` and confirm `attempt_count` is still `0`.
+3. Verify the queue database and worker process are healthy if the execution stays `queued` beyond the next sweep.
+4. If queue health is restored, use `POST /api/v1/executions/{id}/retry` to force another enqueue from the product surface.
+
 ## Dead letter remains open
 
 1. Confirm the failing node error code and payload.
