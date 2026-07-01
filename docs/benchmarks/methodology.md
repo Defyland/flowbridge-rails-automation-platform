@@ -19,8 +19,7 @@ FlowBridge benchmark scripts use k6 and exercise the product path that matters m
 
 ## Local process
 
-1. Start the app with `RAILS_ENV=development bin/rails server`.
-2. Run `k6 run benchmarks/smoke.js`.
-3. Run load, stress, and spike scripts.
-4. Store summaries in `benchmarks/results/`.
-5. Update `benchmarks/baseline.md` with measured results and machine notes.
+1. Run `bin/benchmark smoke`, `bin/benchmark load`, `bin/benchmark stress`, `bin/benchmark spike`, or `bin/benchmark all`.
+2. The runner prepares the database, starts the app on an isolated port, waits for `/ready`, and writes k6 summaries under `benchmarks/results/`.
+3. The runner injects `FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST=127.0.0.1,localhost` and disables the public bootstrap limit only for that local benchmark process so the benchmark graph can validate a loopback connector target and create isolated benchmark tenants without changing the repository's default SSRF or abuse-control posture.
+4. Update `benchmarks/baseline.md` with measured results and machine notes.

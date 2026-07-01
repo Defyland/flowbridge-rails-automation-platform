@@ -1,0 +1,163 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+require "net/http"
+require "open3"
+require "fileutils"
+require "tmpdir"
+require "uri"
+
+SCENARIOS = {
+  "smoke" => "benchmarks/smoke.js",
+  "load" => "benchmarks/load.js",
+  "stress" => "benchmarks/stress.js",
+  "spike" => "benchmarks/spike.js"
+}.freeze
+
+def usage!
+  warn "Usage: bin/benchmark [smoke|load|stress|spike|all]"
+  exit 1
+end
+
+def normalize_allowlist(existing)
+  hosts = existing.to_s.split(",").map { |host| host.strip.downcase }.reject(&:empty?)
+  (hosts + %w[127.0.0.1 localhost]).uniq.join(",")
+end
+
+def wait_for_ready!(base_url, timeout_seconds: 60)
+  uri = URI("#{base_url}/ready")
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout_seconds
+
+  loop do
+    begin
+      response = Net::HTTP.get_response(uri)
+      return if response.is_a?(Net::HTTPSuccess)
+    rescue StandardError
+      nil
+    end
+
+    break if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+    sleep 1
+  end
+
+  raise "timed out waiting for #{uri}"
+end
+
+def run_command!(env, *command)
+  success = system(env, *command)
+  return if success
+
+  raise "command failed: #{command.join(' ')}"
+end
+
+def parse_metrics(summary_path)
+  summary = JSON.parse(File.read(summary_path))
+  metrics = summary.fetch("metrics")
+  duration_metric = metrics.fetch("http_req_duration{stage:ingress}", metrics.fetch("http_req_duration"))
+  failure = metrics.fetch("http_req_failed{stage:ingress}", metrics.fetch("http_req_failed"))
+  iterations = metrics.fetch("iterations")
+  duration = duration_metric.fetch("values", duration_metric)
+  failure_values = failure.fetch("values", failure)
+  iteration_values = iterations.fetch("values", iterations)
+
+  {
+    "p50_ms" => duration.fetch("med"),
+    "p95_ms" => duration.fetch("p(95)"),
+    "p99_ms" => duration.fetch("p(99)", duration.fetch("p(95)")),
+    "max_ms" => duration.fetch("max"),
+    "error_rate" => failure_values.fetch("rate", failure_values.fetch("value")),
+    "requests" => iteration_values.fetch("count"),
+    "throughput_rps" => iteration_values.fetch("rate")
+  }
+end
+
+scenario = ARGV.fetch(0, "smoke")
+usage! unless scenario == "all" || SCENARIOS.key?(scenario)
+
+scenarios = scenario == "all" ? SCENARIOS.keys : [ scenario ]
+port = ENV.fetch("BENCHMARK_PORT", "3202")
+base_url = ENV.fetch("BASE_URL", "http://127.0.0.1:#{port}")
+connector_url = ENV.fetch("CONNECTOR_URL", "#{base_url}/up")
+results_dir = File.expand_path(ENV.fetch("FLOWBRIDGE_BENCHMARK_RESULTS_DIR", "benchmarks/results"))
+timestamp = Time.now.utc.strftime("%Y-%m-%dT%H-%M-%SZ")
+rails_env = ENV.fetch("RAILS_ENV", "development")
+k6_bin = ENV.fetch("K6_BIN", "/opt/homebrew/bin/k6")
+server_log_path = File.join(Dir.tmpdir, "flowbridge-benchmark-#{timestamp}-server.log")
+
+FileUtils.mkdir_p(results_dir)
+
+base_env = {
+  "RAILS_ENV" => rails_env,
+  "FLOWBRIDGE_BOOTSTRAP_ORG_LIMIT_PER_HOUR" => ENV.fetch("FLOWBRIDGE_BOOTSTRAP_ORG_LIMIT_PER_HOUR", "0"),
+  "RAILS_LOG_LEVEL" => ENV.fetch("RAILS_LOG_LEVEL", "warn"),
+  "FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST" => normalize_allowlist(ENV["FLOWBRIDGE_CONNECTOR_PRIVATE_HOST_ALLOWLIST"])
+}
+
+run_command!(base_env, "bin/rails", "db:prepare")
+
+server_log = File.open(server_log_path, "w")
+server_pid = Process.spawn(
+  base_env.merge("PORT" => port),
+  "bin/rails",
+  "server",
+  "-b",
+  "127.0.0.1",
+  "-p",
+  port.to_s,
+  out: server_log,
+  err: server_log
+)
+
+begin
+  wait_for_ready!(base_url)
+
+  failures = []
+
+  scenarios.each do |name|
+    script_path = SCENARIOS.fetch(name)
+    summary_path = File.join(results_dir, "#{timestamp}-#{name}.json")
+    text_path = File.join(results_dir, "#{timestamp}-#{name}.txt")
+
+    stdout, stderr, status = Open3.capture3(
+      base_env.merge(
+        "BASE_URL" => base_url,
+        "CONNECTOR_URL" => connector_url
+      ),
+      k6_bin,
+      "run",
+      script_path,
+      "--summary-trend-stats",
+      "avg,min,med,max,p(90),p(95),p(99)",
+      "--summary-export",
+      summary_path
+    )
+
+    File.write(text_path, [stdout, stderr].reject(&:empty?).join("\n"))
+    raise "benchmark summary missing for #{name}; see #{text_path}" unless File.exist?(summary_path)
+
+    metrics = parse_metrics(summary_path)
+
+    puts [
+      "#{name}:",
+      "requests=#{metrics.fetch('requests')}",
+      format("throughput=%.2f req/s", metrics.fetch("throughput_rps")),
+      format("p50=%.2f ms", metrics.fetch("p50_ms")),
+      format("p95=%.2f ms", metrics.fetch("p95_ms")),
+      format("p99=%.2f ms", metrics.fetch("p99_ms")),
+      format("max=%.2f ms", metrics.fetch("max_ms")),
+      format("error_rate=%.4f", metrics.fetch("error_rate"))
+    ].join(" ")
+
+    failures << name unless status.success?
+  end
+
+  unless failures.empty?
+    raise "k6 thresholds failed for: #{failures.join(', ')}"
+  end
+ensure
+  Process.kill("TERM", server_pid)
+  Process.wait(server_pid)
+  server_log.close
+end

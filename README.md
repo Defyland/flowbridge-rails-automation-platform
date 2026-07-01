@@ -133,7 +133,7 @@ bin/rails test:all
 
 ## Performance benchmarks
 
-k6 scripts live in [benchmarks/](benchmarks/). The documented local baseline is [benchmarks/baseline.md](benchmarks/baseline.md), with methodology in [docs/benchmarks/methodology.md](docs/benchmarks/methodology.md). Benchmark scenarios include smoke, load, stress, and spike tests. The current baseline is honest about a remaining evidence gap: scripts and budgets exist, but measured p50/p95/p99 results still need to be captured against a long-lived app server.
+k6 scripts live in [benchmarks/](benchmarks/). The documented local baseline is [benchmarks/baseline.md](benchmarks/baseline.md), with methodology in [docs/benchmarks/methodology.md](docs/benchmarks/methodology.md). Benchmark scenarios include smoke, load, stress, and spike tests. Raw k6 summaries live under [benchmarks/results/](benchmarks/results/). Use `bin/benchmark smoke|load|stress|spike|all` to run the local benchmark path against an isolated Rails server; the harness temporarily allowlists loopback connector targets and disables the public bootstrap limit only for that benchmark process, without weakening the app's default SSRF or abuse-control posture.
 
 ## Observability
 

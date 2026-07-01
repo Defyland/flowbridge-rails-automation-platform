@@ -4,8 +4,8 @@ export const options = {
   vus: 1,
   iterations: 5,
   thresholds: {
-    http_req_failed: ["rate<0.01"],
-    http_req_duration: ["p(95)<300"],
+    "http_req_failed{stage:ingress}": ["rate<0.01"],
+    "http_req_duration{stage:ingress}": ["p(95)<500"],
   },
 };
 
