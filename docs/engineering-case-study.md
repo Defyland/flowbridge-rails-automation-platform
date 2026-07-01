@@ -58,7 +58,7 @@ Runbooks document invalid signatures, duplicate deliveries, stuck retries, dead 
 
 The hot path is webhook ingress. It is intentionally short: verify signature, enforce idempotency, persist event/execution, enqueue job, return `202`. Node execution happens asynchronously.
 
-k6 scripts exist for smoke, load, stress, and spike scenarios. The repository currently documents budgets and methodology; measured p50/p95/p99 output is a remaining evidence gap.
+k6 scripts exist for smoke, load, stress, and spike scenarios. The repository now carries a local measured baseline in `benchmarks/baseline.md` plus raw k6 summaries in `benchmarks/results/`. Those numbers are intentionally framed as single-node local evidence, not production capacity claims.
 
 ## 9. Scalability Strategy
 
@@ -90,7 +90,8 @@ The product prioritizes reliability and operator visibility over a broad connect
 
 ## 15. What I Would Do Next
 
-- Capture benchmark results from a stable environment.
+- Improve webhook-ingress latency under load, stress, and spike now that the
+  local benchmark baseline is measured and reproducible.
 - Add real provider adapters and outbound idempotency keys.
 - Add alert thresholds and retention policies.
 - Run a production backup/restore drill.

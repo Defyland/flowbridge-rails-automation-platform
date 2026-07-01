@@ -315,3 +315,23 @@ O próprio repositório registra um passo de maturidade importante em
 `docs/spec-driven/verification-report.md`: não bastou “o app roda”. O nível
 aceitável passou a incluir tests:all, RuboCop, Brakeman estrito, bundler-audit,
 lint de OpenAPI, checagem de links de docs e `bin/ci`.
+
+## 14. Addendum: benchmark também é contrato operacional
+
+Um gap posterior apareceu fora do core de domínio: a trilha de benchmark dizia
+que o repo tinha metodologia e scripts, mas a execução local ainda não era um
+contrato operável de verdade.
+
+- O problema real não era “falta mais um gráfico”.
+  Era pior: o reviewer path aceitava um benchmark que falhava com erro opaco de
+  `k6`, e o default do connector URL batia na própria política de egress do
+  projeto.
+
+- A correção certa não é afrouxar a política default.
+  O ajuste local bom é isolar a exceção no harness de benchmark, não no runtime
+  normal do app.
+
+- Isso produz uma lição útil:
+  benchmark para portfolio não é só script no repositório; é um caminho
+  canônico que sobe a app, espera readiness, executa a carga, grava o resumo e
+  falha com mensagem explicável quando o contrato quebra.

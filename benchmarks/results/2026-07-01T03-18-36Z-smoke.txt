@@ -1,0 +1,60 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: benchmarks/smoke.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 10m30s max duration (incl. graceful stop):
+              * default: 5 iterations shared among 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration{stage:ingress}
+    ✓ 'p(95)<500' p(95)=45.32ms
+
+    http_req_failed{stage:ingress}
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 14      25.951493/s
+    checks_succeeded...: 100.00% 14 out of 14
+    checks_failed......: 0.00%   0 out of 14
+
+    ✓ organization created
+    ✓ workflow created
+    ✓ workflow version published
+    ✓ warmup webhook accepted
+    ✓ webhook accepted
+    ✓ execution id returned
+
+    HTTP
+    http_req_duration..............: avg=58.81ms min=31.97ms med=47.38ms max=109.47ms p(90)=103.26ms p(95)=106.36ms p(99)=108.85ms
+      { expected_response:true }...: avg=58.81ms min=31.97ms med=47.38ms max=109.47ms p(90)=103.26ms p(95)=106.36ms p(99)=108.85ms
+      { stage:ingress }............: avg=36.98ms min=31.97ms med=35.19ms max=47.38ms  p(90)=43.26ms  p(95)=45.32ms  p(99)=46.96ms 
+    http_req_failed................: 0.00%  0 out of 9
+      { stage:ingress }............: 0.00%  0 out of 5
+    http_reqs......................: 9      16.683103/s
+
+    EXECUTION
+    iteration_duration.............: avg=37.51ms min=32.08ms med=35.47ms max=47.52ms  p(90)=44.12ms  p(95)=45.82ms  p(99)=47.18ms 
+    iterations.....................: 5      9.26839/s
+
+    NETWORK
+    data_received..................: 11 kB  21 kB/s
+    data_sent......................: 3.9 kB 7.3 kB/s
+
+
+
+
+running (00m00.5s), 0/1 VUs, 5 complete and 0 interrupted iterations
+default ✓ [ 100% ] 1 VUs  00m00.2s/10m0s  5/5 shared iters

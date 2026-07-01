@@ -1,0 +1,205 @@
+{
+    "metrics": {
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 10
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 3176,
+            "value": 0
+        },
+        "data_received": {
+            "count": 4050123,
+            "rate": 38517.579288739435
+        },
+        "http_req_waiting": {
+            "max": 3796.682,
+            "p(90)": 387.11100000000005,
+            "p(95)": 626.0829999999992,
+            "p(99)": 1186.6565,
+            "avg": 263.0360110201514,
+            "min": 15.807,
+            "med": 230.2955
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "iteration_duration": {
+            "p(95)": 627.4380836999991,
+            "p(99)": 1186.87886514,
+            "avg": 263.47305103278654,
+            "min": 27.880292,
+            "med": 230.531354,
+            "max": 3796.876417,
+            "p(90)": 387.4283297
+        },
+        "vus_max": {
+            "value": 10,
+            "min": 10,
+            "max": 10
+        },
+        "http_req_receiving": {
+            "p(95)": 0.057,
+            "p(99)": 0.101,
+            "avg": 0.0334619017632246,
+            "min": 0.011,
+            "med": 0.03,
+            "max": 2.018,
+            "p(90)": 0.049
+        },
+        "http_req_duration{stage:ingress}": {
+            "p(95)": 627.3345499999991,
+            "p(99)": 1186.78076,
+            "avg": 263.37094010088225,
+            "min": 27.787,
+            "med": 230.40550000000002,
+            "max": 3796.774,
+            "p(90)": 387.3274,
+            "thresholds": {
+                "p(95)<500": true,
+                "p(99)<900": true
+            }
+        },
+        "checks": {
+            "fails": 0,
+            "passes": 6348,
+            "value": 1
+        },
+        "http_reqs": {
+            "count": 3176,
+            "rate": 30.204473252055912
+        },
+        "http_req_connecting": {
+            "max": 0.508,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "avg": 0.0011593198992443327,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_blocked": {
+            "p(95)": 0.003,
+            "p(99)": 0.01,
+            "avg": 0.0034159319899245023,
+            "min": 0,
+            "med": 0.002,
+            "max": 0.546,
+            "p(90)": 0.003
+        },
+        "data_sent": {
+            "count": 1464449,
+            "rate": 13927.238869489935
+        },
+        "http_req_duration": {
+            "p(99)": 1186.699,
+            "avg": 263.08151039042775,
+            "min": 15.948,
+            "med": 230.3225,
+            "max": 3796.774,
+            "p(90)": 387.153,
+            "p(95)": 626.1347499999991
+        },
+        "iterations": {
+            "count": 3172,
+            "rate": 30.166432353753574
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(90)": 387.153,
+            "p(95)": 626.1347499999991,
+            "p(99)": 1186.699,
+            "avg": 263.08151039042775,
+            "min": 15.948,
+            "med": 230.3225,
+            "max": 3796.774
+        },
+        "http_req_failed{stage:ingress}": {
+            "fails": 3172,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_sending": {
+            "med": 0.011,
+            "max": 0.398,
+            "p(90)": 0.016,
+            "p(95)": 0.018,
+            "p(99)": 0.039,
+            "avg": 0.01203746851385405,
+            "min": 0.003
+        }
+    },
+    "setup_data": {
+        "triggerKey": "k6-1782875920378-997e96-benchmark-lead-intake-v1-889e70a6",
+        "webhookSecret": "whsec_9c55b94ce7a0e73e6102dc53c0b0080a48337a100b8a8522"
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "organization created": {
+                            "name": "organization created",
+                            "path": "::setup::organization created",
+                            "id": "05a5132e451b70930c9d81aa30b620f0",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "workflow created": {
+                            "name": "workflow created",
+                            "path": "::setup::workflow created",
+                            "id": "b611b29d7b2bc6e741f85af8babcff74",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "workflow version published": {
+                            "id": "9f5bd734880e3ce5569282fc9d163a75",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "workflow version published",
+                            "path": "::setup::workflow version published"
+                        },
+                        "warmup webhook accepted": {
+                            "name": "warmup webhook accepted",
+                            "path": "::setup::warmup webhook accepted",
+                            "id": "a55b0420f7eaba17b15ae9331dc4c8ee",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "webhook accepted": {
+                "name": "webhook accepted",
+                "path": "::webhook accepted",
+                "id": "538447d083259a39b80f98f3a31270d6",
+                "passes": 3172,
+                "fails": 0
+            },
+            "execution id returned": {
+                "name": "execution id returned",
+                "path": "::execution id returned",
+                "id": "44d26b9b821dc4b7bce6f53e37d957a5",
+                "passes": 3172,
+                "fails": 0
+            }
+        }
+    }
+}

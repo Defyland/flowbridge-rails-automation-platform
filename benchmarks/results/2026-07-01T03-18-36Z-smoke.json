@@ -1,0 +1,194 @@
+{
+    "setup_data": {
+        "webhookSecret": "whsec_3f2e88ed9c83d8744641f52a8cb5ff51a42b75768190a53f",
+        "triggerKey": "k6-1782875919502-4a49a8-benchmark-lead-intake-v1-0db456c8"
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "organization created": {
+                            "path": "::setup::organization created",
+                            "id": "05a5132e451b70930c9d81aa30b620f0",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "organization created"
+                        },
+                        "workflow created": {
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "workflow created",
+                            "path": "::setup::workflow created",
+                            "id": "b611b29d7b2bc6e741f85af8babcff74"
+                        },
+                        "workflow version published": {
+                            "path": "::setup::workflow version published",
+                            "id": "9f5bd734880e3ce5569282fc9d163a75",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "workflow version published"
+                        },
+                        "warmup webhook accepted": {
+                            "name": "warmup webhook accepted",
+                            "path": "::setup::warmup webhook accepted",
+                            "id": "a55b0420f7eaba17b15ae9331dc4c8ee",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    },
+                "name": "setup"
+            }
+        },
+        "checks": {
+            "webhook accepted": {
+                "name": "webhook accepted",
+                "path": "::webhook accepted",
+                "id": "538447d083259a39b80f98f3a31270d6",
+                "passes": 5,
+                "fails": 0
+            },
+            "execution id returned": {
+                "passes": 5,
+                "fails": 0,
+                "name": "execution id returned",
+                "path": "::execution id returned",
+                "id": "44d26b9b821dc4b7bce6f53e37d957a5"
+            }
+        },
+        "name": ""
+    },
+    "metrics": {
+        "http_req_blocked": {
+            "max": 3.135,
+            "p(90)": 0.9534000000000005,
+            "p(95)": 2.044199999999999,
+            "p(99)": 2.9168399999999997,
+            "avg": 0.3960000000000001,
+            "min": 0.003,
+            "med": 0.003
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0
+        },
+        "http_req_receiving": {
+            "max": 0.285,
+            "p(90)": 0.14500000000000002,
+            "p(95)": 0.21499999999999994,
+            "p(99)": 0.27099999999999996,
+            "avg": 0.08611111111111112,
+            "min": 0.037,
+            "med": 0.055
+        },
+        "data_received": {
+            "count": 11363,
+            "rate": 21063.34388694047
+        },
+        "http_req_waiting": {
+            "avg": 58.62644444444444,
+            "min": 31.924,
+            "med": 47.32,
+            "max": 109.379,
+            "p(90)": 103.1862,
+            "p(95)": 106.2826,
+            "p(99)": 108.75972
+        },
+        "http_req_sending": {
+            "p(95)": 0.4029999999999999,
+            "p(99)": 0.5134,
+            "avg": 0.10088888888888889,
+            "min": 0.013,
+            "med": 0.023,
+            "max": 0.541,
+            "p(90)": 0.26500000000000007
+        },
+        "http_req_duration{stage:ingress}": {
+            "med": 35.196,
+            "max": 47.381,
+            "p(90)": 43.2622,
+            "p(95)": 45.3216,
+            "p(99)": 46.96912,
+            "avg": 36.9876,
+            "min": 31.974,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "data_sent": {
+            "count": 3929,
+            "rate": 7283.10112926068
+        },
+        "http_req_duration": {
+            "avg": 58.813444444444436,
+            "min": 31.974,
+            "med": 47.381,
+            "max": 109.471,
+            "p(90)": 103.267,
+            "p(95)": 106.369,
+            "p(99)": 108.8506
+        },
+        "http_req_failed{stage:ingress}": {
+            "passes": 0,
+            "fails": 5,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "iterations": {
+            "count": 5,
+            "rate": 9.268390340112854
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 47.381,
+            "max": 109.471,
+            "p(90)": 103.267,
+            "p(95)": 106.369,
+            "p(99)": 108.8506,
+            "avg": 58.813444444444436,
+            "min": 31.974
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 9,
+            "value": 0
+        },
+        "http_reqs": {
+            "count": 9,
+            "rate": 16.683102612203136
+        },
+        "http_req_connecting": {
+            "med": 0,
+            "max": 0.779,
+            "p(90)": 0.45500000000000007,
+            "p(95)": 0.6169999999999999,
+            "p(99)": 0.7466,
+            "avg": 0.12811111111111112,
+            "min": 0
+        },
+        "checks": {
+            "passes": 14,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "min": 32.084125,
+            "med": 35.478542,
+            "max": 47.520792,
+            "p(90)": 44.124842,
+            "p(95)": 45.822817,
+            "p(99)": 47.181197,
+            "avg": 37.510191799999994
+        }
+    }
+}

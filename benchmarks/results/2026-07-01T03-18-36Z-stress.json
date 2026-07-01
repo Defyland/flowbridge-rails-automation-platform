@@ -1,0 +1,205 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "organization created": {
+                            "name": "organization created",
+                            "path": "::setup::organization created",
+                            "id": "05a5132e451b70930c9d81aa30b620f0",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        "workflow created": {
+                            "fails": 0,
+                            "name": "workflow created",
+                            "path": "::setup::workflow created",
+                            "id": "b611b29d7b2bc6e741f85af8babcff74",
+                            "passes": 1
+                        },
+                        "workflow version published": {
+                            "fails": 0,
+                            "name": "workflow version published",
+                            "path": "::setup::workflow version published",
+                            "id": "9f5bd734880e3ce5569282fc9d163a75",
+                            "passes": 1
+                        },
+                        "warmup webhook accepted": {
+                            "name": "warmup webhook accepted",
+                            "path": "::setup::warmup webhook accepted",
+                            "id": "a55b0420f7eaba17b15ae9331dc4c8ee",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "webhook accepted": {
+                "passes": 3832,
+                "fails": 0,
+                "name": "webhook accepted",
+                "path": "::webhook accepted",
+                "id": "538447d083259a39b80f98f3a31270d6"
+            },
+            "execution id returned": {
+                "name": "execution id returned",
+                "path": "::execution id returned",
+                "id": "44d26b9b821dc4b7bce6f53e37d957a5",
+                "passes": 3832,
+                "fails": 0
+            }
+        }
+    },
+    "metrics": {
+        "data_received": {
+            "count": 4895963,
+            "rate": 40612.62079743401
+        },
+        "http_req_duration{stage:ingress}": {
+            "p(99)": 1466.82054,
+            "avg": 665.9773139352804,
+            "min": 28.9,
+            "med": 648.351,
+            "max": 1569.233,
+            "p(90)": 1237.6578000000002,
+            "p(95)": 1360.6452999999992,
+            "thresholds": {
+                "p(95)<1000": true,
+                "p(99)<1500": false
+            }
+        },
+        "http_reqs": {
+            "count": 3836,
+            "rate": 31.82009614430437
+        },
+        "http_req_connecting": {
+            "p(99)": 0.29359999999999986,
+            "avg": 0.005499217935349322,
+            "min": 0,
+            "med": 0,
+            "max": 3.664,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_failed{stage:ingress}": {
+            "passes": 0,
+            "fails": 3832,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "max": 1569.185,
+            "p(90)": 1237.0195,
+            "p(95)": 1359.6302499999993,
+            "p(99)": 1466.7321,
+            "avg": 665.3057442648583,
+            "min": 28.848,
+            "med": 647.7855
+        },
+        "http_req_failed": {
+            "fails": 3836,
+            "passes": 0,
+            "value": 0
+        },
+        "vus": {
+            "max": 50,
+            "value": 1,
+            "min": 1
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_req_receiving": {
+            "avg": 0.03245646506777941,
+            "min": 0.01,
+            "med": 0.029,
+            "max": 3.526,
+            "p(90)": 0.046,
+            "p(95)": 0.053,
+            "p(99)": 0.09359999999999986
+        },
+        "http_req_blocked": {
+            "med": 0.002,
+            "max": 3.703,
+            "p(90)": 0.003,
+            "p(95)": 0.003,
+            "p(99)": 0.32765,
+            "avg": 0.00798540145985398,
+            "min": 0
+        },
+        "data_sent": {
+            "count": 1768568,
+            "rate": 14670.49108387385
+        },
+        "http_req_duration": {
+            "med": 647.827,
+            "max": 1569.233,
+            "p(90)": 1237.0650000000003,
+            "p(95)": 1359.7304999999992,
+            "p(99)": 1466.7699,
+            "avg": 665.350081074034,
+            "min": 28.9
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 1359.7304999999992,
+            "p(99)": 1466.7699,
+            "avg": 665.350081074034,
+            "min": 28.9,
+            "med": 647.827,
+            "max": 1569.233,
+            "p(90)": 1237.0650000000003
+        },
+        "http_req_sending": {
+            "med": 0.011,
+            "max": 0.202,
+            "p(90)": 0.016,
+            "p(95)": 0.019,
+            "p(99)": 0.04464999999999996,
+            "avg": 0.011880344108446479,
+            "min": 0.004
+        },
+        "checks": {
+            "passes": 7668,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "p(99)": 1466.9066962699999,
+            "avg": 666.0778834893005,
+            "min": 28.999875,
+            "med": 648.4417914999999,
+            "max": 1569.317,
+            "p(90)": 1237.7675333000002,
+            "p(95)": 1360.7634911499993
+        },
+        "iterations": {
+            "count": 3832,
+            "rate": 31.786915647803532
+        }
+    },
+    "setup_data": {
+        "webhookSecret": "whsec_975520ee75443868f6be64cdd00c68e57130a6b0fbd80ac4",
+        "triggerKey": "k6-1782876025797-8aa8a0-benchmark-lead-intake-v1-146e5d00"
+    }
+}
