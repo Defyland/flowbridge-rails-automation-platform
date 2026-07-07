@@ -9,7 +9,7 @@ CI.run do
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
   step "Contract: OpenAPI YAML parses", %(ruby -e 'require "yaml"; YAML.load_file("openapi.yaml")')
   step "Contract: serverless ingress normalizer", "ruby -I services/serverless/webhook_ingress/lib services/serverless/webhook_ingress/test/flowbridge_serverless_ingress_test.rb"
-  step "Infra: OpenTofu/Terraform serverless ingress", "bin/infra-check"
+  step "Infra: OpenTofu/Terraform serverless ingress", "ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check"
   step "Tests: Rails", "bin/rails test:all"
   step "Tests: System", "bin/rails test:system"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"

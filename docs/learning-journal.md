@@ -368,3 +368,24 @@ Rails e mover apenas a borda de provider para API Gateway + Lambda.
 A decisão técnica defendável aqui é não criar um segundo sistema de verdade
 antes da hora. SQS é uma evolução plausível, mas só deve entrar quando volume,
 janela de deploy ou provider retry provarem que o relay síncrono é gargalo.
+
+## 16. Addendum: CI boa nao depende do acaso da imagem do runner
+
+O primeiro corte da trilha serverless ainda tinha um problema de truth boundary:
+o job `serverless-infra` chamava `bin/infra-check`, mas a workflow nao fixava a
+presenca de `tofu` ou `terraform`.
+
+Isso deixava a garantia errada por um detalhe feio: a CI podia passar so com o
+fallback estatico do script, dependendo do que viesse preinstalado na imagem do
+GitHub Actions.
+
+A correcao menor e correta foi:
+
+- instalar Terraform `1.9.8` explicitamente na workflow;
+- manter `bin/infra-check` com fallback local honesto quando a ferramenta nao
+  existe;
+- documentar a diferenca entre smoke local sem toolchain e validacao completa
+  no gate remoto.
+
+A licao vale fora deste repo: quando a narrativa diz "a CI valida IaC", o
+arquivo da CI precisa tornar essa validacao inevitavel, nao apenas possivel.

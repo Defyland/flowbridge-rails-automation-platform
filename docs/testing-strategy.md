@@ -37,7 +37,7 @@ When a test needs a one-off state, it can still create records inline. Shared ex
 - `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error`
 - OpenAPI YAML parsing
 - standalone serverless ingress normalizer tests
-- OpenTofu/Terraform serverless ingress validation through `bin/infra-check`
+- `ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check`, which performs full Terraform validation when the asdf Terraform plugin is available and otherwise degrades to an explicit static smoke check
 - OpenAPI route coverage and response-contract tests
 - `bin/rails test:all`
 - `bin/rails test:system`
@@ -51,7 +51,8 @@ Additional release confidence checks used for the spec-driven pass:
 - route-to-OpenAPI drift checks for every `/api/v1` route
 - CI/deploy workflow YAML parsing
 - `docker build -t flowbridge:test .`
-- `ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check` for full local Terraform validation when the asdf Terraform plugin is available
+- GitHub Actions `serverless-infra` installs Terraform `1.9.8` before running `bin/infra-check`, so the remote gate always executes real `fmt`, `init -backend=false`, and `validate`
+- local `bin/ci` uses the same `ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check` path so the default reviewer entrypoint does not depend on ambient shim selection
 
 ## Coverage Expectation
 

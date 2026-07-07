@@ -90,7 +90,7 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - API key and public bootstrap rate limits use the shared atomic limiter.
 - Public organization creation is abuse-limited and no longer accepts client-supplied plan or rate-limit escalation.
 - Local `bin/ci` and GitHub Actions both run system tests and seed validation; Brakeman is configured to fail on warnings.
-- GitHub Actions includes a `serverless-infra` job for the standalone Lambda normalizer and `bin/infra-check`.
+- GitHub Actions includes a `serverless-infra` job that installs Terraform `1.9.8`, runs the standalone Lambda normalizer test, and then executes `bin/infra-check`.
 
 ## Partial Criteria
 

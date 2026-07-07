@@ -87,6 +87,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
       - name: Test serverless ingress normalizer
         run: ruby -I services/serverless/webhook_ingress/lib services/serverless/webhook_ingress/test/flowbridge_serverless_ingress_test.rb
       - name: Validate serverless ingress IaC
