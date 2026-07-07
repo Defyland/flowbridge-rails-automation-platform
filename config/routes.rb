@@ -36,6 +36,7 @@ Rails.application.routes.draw do
         post :resolve, on: :member
       end
 
+      post "serverless/webhooks/:trigger_key", to: "serverless_webhooks#create", as: :serverless_webhook
       post "webhooks/:trigger_key", to: "webhook_events#create", as: :webhook_event
     end
   end

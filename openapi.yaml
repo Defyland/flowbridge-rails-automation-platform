@@ -253,6 +253,48 @@ paths:
           $ref: "#/components/responses/Error"
         "422":
           $ref: "#/components/responses/Error"
+  /api/v1/serverless/webhooks/{trigger_key}:
+    post:
+      operationId: ingestServerlessWebhook
+      security: []
+      summary: Ingest a normalized serverless webhook envelope
+      parameters:
+        - name: trigger_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-FlowBridge-Serverless-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-Id
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServerlessWebhookEnvelopeRequest"
+      responses:
+        "202":
+          description: Serverless webhook envelope accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerlessWebhookIngestionResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
   /api/v1/executions:
     get:
       operationId: listExecutions
@@ -917,6 +959,76 @@ components:
           format: date-time
         execution_id:
           type: [integer, "null"]
+    ServerlessWebhookEnvelopeRequest:
+      type: object
+      required:
+        - schema_version
+        - source
+        - external_event_id
+        - received_at
+        - raw_body_sha256
+        - headers
+        - payload
+      additionalProperties: false
+      properties:
+        schema_version:
+          type: integer
+          enum: [1]
+        source:
+          type: string
+          description: Provider or edge source, for example stripe, github, or custom.crm.
+        external_event_id:
+          type: string
+          description: Source event identifier after provider-specific normalization.
+        received_at:
+          type: string
+          format: date-time
+        raw_body_sha256:
+          type: string
+          description: SHA-256 digest of the provider raw body before normalization.
+        correlation_id:
+          type: [string, "null"]
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        payload:
+          type: object
+          additionalProperties: true
+    ServerlessWebhookIngestionResponse:
+      type: object
+      required:
+        - serverless_ingestion
+        - webhook_event
+        - workflow_execution
+        - duplicate
+      additionalProperties: false
+      properties:
+        serverless_ingestion:
+          $ref: "#/components/schemas/ServerlessIngestion"
+        webhook_event:
+          $ref: "#/components/schemas/WebhookEvent"
+        workflow_execution:
+          $ref: "#/components/schemas/WorkflowExecution"
+        duplicate:
+          type: boolean
+    ServerlessIngestion:
+      type: object
+      required:
+        - source
+        - external_event_id
+        - idempotency_key
+        - correlation_id
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+        external_event_id:
+          type: string
+        idempotency_key:
+          type: string
+        correlation_id:
+          type: string
     WorkflowExecutionListResponse:
       type: object
       required:

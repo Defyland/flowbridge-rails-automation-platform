@@ -93,6 +93,35 @@ class OpenapiResponseContractTest < ActionDispatch::IntegrationTest
       assert_openapi_json_response("/api/v1/webhooks/{trigger_key}", :post, :accepted)
 
       execution_id = json_response.dig("workflow_execution", "id")
+
+      raw_source_body = JSON.generate({ id: "evt-contract-serverless", email: "serverless-contract@example.com" })
+      raw_envelope = JSON.generate(
+        schema_version: 1,
+        source: "stripe",
+        external_event_id: "evt-contract-serverless",
+        received_at: "2026-07-07T15:20:00Z",
+        raw_body_sha256: OpenSSL::Digest::SHA256.hexdigest(raw_source_body),
+        correlation_id: "corr-contract-serverless",
+        headers: { "Stripe-Signature" => "t=1,v1=serverless123456" },
+        payload: JSON.parse(raw_source_body)
+      )
+
+      with_env("FLOWBRIDGE_SERVERLESS_INGRESS_SECRET" => "contract-edge-secret") do
+        assert_enqueued_with(job: WorkflowExecutionJob) do
+          post "/api/v1/serverless/webhooks/#{trigger_key}",
+            params: raw_envelope,
+            headers: {
+              "Content-Type" => "application/json",
+              "X-FlowBridge-Serverless-Signature" => FlowBridge::SignatureVerifier.signature(
+                secret: "contract-edge-secret",
+                payload: raw_envelope
+              ),
+              "X-Correlation-Id" => "corr-contract-serverless"
+            }
+        end
+      end
+      assert_openapi_json_response("/api/v1/serverless/webhooks/{trigger_key}", :post, :accepted)
+
       perform_enqueued_jobs
 
       get "/api/v1/executions", headers: auth_headers(token), as: :json
