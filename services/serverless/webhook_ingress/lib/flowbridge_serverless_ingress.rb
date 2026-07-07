@@ -19,8 +19,8 @@ module FlowBridgeServerlessIngress
   FORWARDED_HEADER = /\A(content-type|user-agent|stripe-signature|x-github-delivery|x-hub-signature-256|x-request-id|x-correlation-id|x-flowbridge-event-id)\z/i
 
   class << self
-    def handle(event:, context: nil, env: ENV, http_client: HttpClient.new, clock: Time)
-      Handler.new(env: env, http_client: http_client, clock: clock).call(event: event, context: context)
+    def handle(event:, context: nil, env: ENV, http_client: HttpClient.new, clock: Time, secret_provider: SecretsManagerSecretProvider.new)
+      Handler.new(env: env, http_client: http_client, clock: clock, secret_provider: secret_provider).call(event: event, context: context)
     end
 
     def signature(secret:, payload:)
@@ -29,10 +29,11 @@ module FlowBridgeServerlessIngress
   end
 
   class Handler
-    def initialize(env:, http_client:, clock:)
+    def initialize(env:, http_client:, clock:, secret_provider:)
       @env = env
       @http_client = http_client
       @clock = clock
+      @secret_provider = secret_provider
     end
 
     def call(event:, context: nil)
@@ -50,7 +51,7 @@ module FlowBridgeServerlessIngress
 
     private
 
-    attr_reader :env, :http_client, :clock
+    attr_reader :env, :http_client, :clock, :secret_provider
 
     def decoded_body(event)
       raise ValidationError, "event body must be present" unless event.is_a?(Hash) && event.key?("body")
@@ -145,10 +146,20 @@ module FlowBridgeServerlessIngress
         "Content-Type" => "application/json",
         "X-Correlation-Id" => correlation_id,
         "X-FlowBridge-Serverless-Signature" => FlowBridgeServerlessIngress.signature(
-          secret: required_env("FLOWBRIDGE_SERVERLESS_INGRESS_SECRET"),
+          secret: serverless_ingress_secret,
           payload: raw_envelope
         )
       }
+    end
+
+    def serverless_ingress_secret
+      direct_secret = env["FLOWBRIDGE_SERVERLESS_INGRESS_SECRET"].to_s.strip
+      return direct_secret unless direct_secret.empty?
+
+      secret_arn = env["FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN"].to_s.strip
+      raise ConfigurationError, "FLOWBRIDGE_SERVERLESS_INGRESS_SECRET or FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN must be configured" if secret_arn.empty?
+
+      secret_provider.fetch(secret_arn).to_s
     end
 
     def rails_ingress_uri(trigger_key)
@@ -205,6 +216,16 @@ module FlowBridgeServerlessIngress
       request.body = body
 
       http.request(request)
+    end
+  end
+
+  class SecretsManagerSecretProvider
+    def fetch(secret_arn)
+      require "aws-sdk-secretsmanager"
+
+      Aws::SecretsManager::Client.new.get_secret_value(secret_id: secret_arn).secret_string
+    rescue LoadError
+      raise ConfigurationError, "aws-sdk-secretsmanager must be available when FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN is used"
     end
   end
 end

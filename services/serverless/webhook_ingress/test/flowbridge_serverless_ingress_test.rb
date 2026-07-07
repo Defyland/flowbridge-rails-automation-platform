@@ -69,6 +69,29 @@ class FlowbridgeServerlessIngressTest < Minitest::Test
     refute_includes response.fetch("body"), "internal"
   end
 
+  def test_can_sign_with_secret_loaded_from_external_provider
+    client = FakeHttpClient.new(status: 202, body: "{}")
+    secret_provider = FakeSecretProvider.new("serverless-secret")
+    arn_env = env.reject { |key, _| key == "FLOWBRIDGE_SERVERLESS_INGRESS_SECRET" }.merge(
+      "FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN" => "arn:aws:secretsmanager:us-east-1:123456789012:secret:flowbridge"
+    )
+
+    FlowBridgeServerlessIngress.handle(
+      event: api_gateway_event(body: JSON.generate("id" => "evt_secret_arn")),
+      env: arn_env,
+      http_client: client,
+      clock: FixedClock,
+      secret_provider: secret_provider
+    )
+
+    assert_equal [ "arn:aws:secretsmanager:us-east-1:123456789012:secret:flowbridge" ], secret_provider.secret_ids
+    request = client.requests.first
+    assert_equal FlowBridgeServerlessIngress.signature(
+      secret: "serverless-secret",
+      payload: request.fetch(:body)
+    ), request.fetch(:headers).fetch("X-FlowBridge-Serverless-Signature")
+  end
+
   private
 
   def env
@@ -118,6 +141,20 @@ class FlowbridgeServerlessIngressTest < Minitest::Test
         read_timeout: read_timeout
       }
       Response.new(@status, @body)
+    end
+  end
+
+  class FakeSecretProvider
+    attr_reader :secret_ids
+
+    def initialize(secret)
+      @secret = secret
+      @secret_ids = []
+    end
+
+    def fetch(secret_id)
+      secret_ids << secret_id
+      @secret
     end
   end
 end
