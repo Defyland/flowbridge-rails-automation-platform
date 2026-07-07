@@ -1,7 +1,8 @@
 # Learning Journal
 
-Este journal documenta a história do repositório até o commit `c732404`, que é o
-`HEAD` gravado no momento desta edição.
+Este journal documenta a história do repositório até o passe serverless/IaC de
+2026-07-07, incluindo os commits `2bc8db7`, `bc66480`, `91bfe1b`, `754556e`,
+`25b104c`, `6206d16` e `18c813d`.
 
 ## Como este journal usa evidências
 
@@ -208,6 +209,11 @@ Ao terminar este journal, o leitor deve conseguir:
   pró: reduz latência cognitiva entre runtime e console.
   contra: cresce a superfície do deployable.
 
+- Ingress serverless na borda:
+  pró: isola normalização de provider, throttling e deploy independente.
+  contra: adiciona API Gateway, Lambda, segredo compartilhado e observabilidade
+  distribuída sem ainda tirar Rails do caminho síncrono de acknowledgement.
+
 ## 6. Erros, correções e endurecimentos
 
 - O histórico mostra que o repo não tratou readiness como resolvido cedo demais;
@@ -266,6 +272,13 @@ Ao terminar este journal, o leitor deve conseguir:
 | `d6b3001` | Como guardar evidência sem vazar segredo? | secret masking | tests/services |
 | `b44745c` | A barra de CI é suficiente? | quality gates mais rígidos | CI |
 | `c732404` | Como explicar a nova barra? | docs de stricter quality gates | docs |
+| `2bc8db7` | Como Rails recebe eventos normalizados por serverless? | endpoint interno assinado + contrato OpenAPI | integration tests |
+| `bc66480` | Como provar microserviço serverless fora do Rails? | Lambda normalizer Ruby standalone | pure Ruby tests |
+| `91bfe1b` | Como evitar segredo em Terraform state? | suporte a Secrets Manager ARN no Lambda | pure Ruby tests |
+| `754556e` | Como tornar a topologia cloud reprodutível? | OpenTofu/Terraform API Gateway + Lambda + IAM | `bin/infra-check` |
+| `25b104c` | Por que essa arquitetura foi escolhida? | ADR 007 e docs de segurança/escala/deploy | docs/tests |
+| `6206d16` | A supply chain está limpa? | `json` atualizado para 2.20.0 | bundler-audit |
+| `18c813d` | O CI remoto cobre serverless/IaC? | job `serverless-infra` no GitHub Actions | YAML parse + local commands |
 
 ## 9A. Perguntas de recuperação
 
@@ -289,6 +302,8 @@ bin/rubocop
 bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
 bin/bundler-audit
 npx --yes @redocly/cli lint openapi.yaml
+ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check
+ruby -I services/serverless/webhook_ingress/lib services/serverless/webhook_ingress/test/flowbridge_serverless_ingress_test.rb
 bin/ci
 ```
 
@@ -305,8 +320,8 @@ Se a próxima feature for um novo tipo de node:
 
 - não prova escala alta de automação massiva;
 - não tenta virar engine distribuído de longa duração;
-- não cobre secrets manager real, incident response real nem deploy com tráfego
-  público contínuo;
+- não prova Secrets Manager real em uma conta AWS, incident response real nem
+  deploy com tráfego público contínuo;
 - mantém foco em clareza de boundary e operabilidade local auditável.
 
 ## 13. Resultado das revisões de qualidade
@@ -335,3 +350,21 @@ contrato operável de verdade.
   benchmark para portfolio não é só script no repositório; é um caminho
   canônico que sobe a app, espera readiness, executa a carga, grava o resumo e
   falha com mensagem explicável quando o contrato quebra.
+
+## 15. Addendum: serverless sem perder o core Rails
+
+O passe de 2026-07-07 adicionou serverless como ativo técnico real, não como
+desenho aspiracional. A escolha importante foi manter o engine de workflow no
+Rails e mover apenas a borda de provider para API Gateway + Lambda.
+
+- `app/controllers/api/v1/serverless_webhooks_controller.rb` recebe envelopes
+  internos assinados e delega para `FlowBridge::WebhookIngestor`.
+- `FlowBridge::ServerlessWebhookEnvelope` valida `schema_version`, `source`,
+  `external_event_id`, digest do body original, headers e payload.
+- `services/serverless/webhook_ingress` roda sem Rails e tem teste puro Ruby.
+- `infra/opentofu/aws-serverless-ingress` descreve API Gateway, Lambda, IAM,
+  CloudWatch, throttling e Secrets Manager ARN.
+
+A decisão técnica defendável aqui é não criar um segundo sistema de verdade
+antes da hora. SQS é uma evolução plausível, mas só deve entrar quando volume,
+janela de deploy ou provider retry provarem que o relay síncrono é gargalo.

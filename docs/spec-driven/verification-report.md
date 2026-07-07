@@ -2,9 +2,9 @@
 
 ## Summary
 
-Verified on 2026-05-31 against the local repository state after the tech-lead hardening pass.
+Verified on 2026-07-07 against the local repository state after the serverless/IaC hardening pass.
 
-The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, SSRF-aware egress policy, graph validation, duplicate-execution guarding, outbound idempotency, secret-safe connector evidence, atomic rate limiting, public bootstrap abuse controls, executable OpenAPI response contracts, and stricter local/remote CI gates.
+The repository now has explicit product, domain, architecture, security, scalability, operational-cost, ADR, event-contract, senior-readiness, serverless, IaC, and tech-lead hardening evidence. The runtime gaps from the senior review were closed with real HTTP connector execution, SSRF-aware egress policy, graph validation, duplicate-execution guarding, outbound idempotency, secret-safe connector evidence, atomic rate limiting, public bootstrap abuse controls, executable OpenAPI response contracts, a serverless webhook ingress boundary, OpenTofu/Terraform validation, and stricter local/remote CI gates.
 
 ## Commands Run
 
@@ -17,6 +17,18 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - `bin/rails test test/integration/openapi_response_contract_test.rb test/repository_spec_compliance_test.rb`
   - Result: passed.
   - Evidence: 7 runs, 1089 assertions, 0 failures, 0 errors, 0 skips.
+- `PATH=/Users/allanflavio/.asdf/shims:$PATH bin/rails test test/services/serverless_webhook_envelope_test.rb test/integration/serverless_webhook_ingress_test.rb`
+  - Result: passed.
+  - Evidence: 6 runs, 28 assertions, 0 failures, 0 errors, 0 skips.
+- `PATH=/Users/allanflavio/.asdf/shims:$PATH bin/rails test test/integration/openapi_response_contract_test.rb test/repository_spec_compliance_test.rb test/services/serverless_webhook_envelope_test.rb test/integration/serverless_webhook_ingress_test.rb`
+  - Result: passed.
+  - Evidence: 13 runs, 1234 assertions, 0 failures, 0 errors, 0 skips.
+- `ruby -I services/serverless/webhook_ingress/lib services/serverless/webhook_ingress/test/flowbridge_serverless_ingress_test.rb`
+  - Result: passed.
+  - Evidence: 4 runs, 25 assertions, 0 failures, 0 errors, 0 skips.
+- `ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check`
+  - Result: passed.
+  - Evidence: Terraform `fmt -check`, `init -backend=false`, and `validate -no-color` succeeded for `infra/opentofu/aws-serverless-ingress`.
 - `bin/rails test test/integration/api_workflow_lifecycle_test.rb test/jobs/workflow_execution_job_test.rb test/integration/webhook_failure_scenarios_test.rb`
   - Result: passed.
   - Evidence: 4 runs, 21 assertions, 0 failures, 0 errors, 0 skips.
@@ -43,12 +55,12 @@ The repository now has explicit product, domain, architecture, security, scalabi
   - Evidence: `Markdown links OK`.
 - `bin/ci`
   - Result: passed.
-  - Evidence: setup, RuboCop, Bundler Audit, strict Brakeman, OpenAPI parse, Rails tests, system tests, and seed replant all passed in 43.88s.
-  - Rails test evidence inside CI: 49 runs, 1278 assertions, 0 failures, 0 errors, 0 skips, 91.17% line coverage.
+  - Evidence: setup, RuboCop, Bundler Audit, strict Brakeman, OpenAPI parse, standalone serverless ingress normalizer test, `bin/infra-check`, Rails tests, system tests, and seed replant all passed in 18.87s.
+  - Rails test evidence inside CI: 57 runs, 1436 assertions, 0 failures, 0 errors, 0 skips, 91.63% line coverage.
   - System test evidence inside CI: 1 run, 3 assertions, 0 failures, 0 errors, 0 skips.
 - `docker build -t flowbridge:test .`
-  - Result: passed.
-  - Evidence: image `flowbridge:test` built successfully with production asset precompilation.
+  - Result: blocked by external Docker Hub/Colima metadata resolution.
+  - Evidence: two attempts at `docker build -t flowbridge-ci .` failed before executing the Dockerfile while resolving `docker/dockerfile:1` with `DeadlineExceeded: context deadline exceeded`. A direct `docker pull docker/dockerfile:1` also hung until interrupted.
 
 ## Passing Criteria
 
@@ -65,8 +77,12 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - Testing documentation covers Minitest layers, fixture strategy, CI gate, coverage expectations, and intentional gaps.
 - Event documentation covers workflow, execution, node, webhook, and DLQ events with idempotency by `event_id`, `source`, and `workflow_id`.
 - ADRs capture irreversible workflow-version decisions and event sourcing as a future option rather than an MVP dependency.
+- ADR 007 captures the serverless webhook ingress decision, rejected alternatives, pros/cons, consequences, and verification evidence.
+- OpenTofu/Terraform module provisions API Gateway, Lambda, CloudWatch logs, IAM, throttling, and Secrets Manager ARN wiring for the serverless edge.
+- Lambda normalizer has standalone Ruby tests independent from Rails and AWS network access.
 - CI-facing repository compliance now checks required documentation directories/files, route-to-OpenAPI coverage for every `/api/v1` route, 2xx response schemas, and parseable event schemas.
 - OpenAPI integration tests validate real JSON responses for organization, credential, workflow, workflow version, webhook, execution, dead-letter, retry, resolve, and standard error flows.
+- OpenAPI integration tests validate the internal serverless webhook envelope response.
 - HTTP connector execution is real and tested against a local loopback endpoint.
 - Stored connector evidence masks credential headers, webhook signatures, cookies, and sensitive connector URL query parameters.
 - Workflow graph and retry policy validation reject invalid configs before publication.
@@ -74,18 +90,20 @@ The repository now has explicit product, domain, architecture, security, scalabi
 - API key and public bootstrap rate limits use the shared atomic limiter.
 - Public organization creation is abuse-limited and no longer accepts client-supplied plan or rate-limit escalation.
 - Local `bin/ci` and GitHub Actions both run system tests and seed validation; Brakeman is configured to fail on warnings.
+- GitHub Actions includes a `serverless-infra` job for the standalone Lambda normalizer and `bin/infra-check`.
 
 ## Partial Criteria
 
 - Measured k6 benchmark results remain partial until k6 runs are captured against a long-lived app server.
 - Manual Kamal deployment remains unexecuted until production secrets and target hosts are configured.
+- AWS API Gateway/Lambda deployment remains unexecuted until a real cloud account, secret ARN, domain, and alerting policy are configured.
 - Backup/restore and DLQ replay drills are documented, but not executed in this local pass.
 
 ## Failed or Blocked Criteria
 
-None in the local validation scope.
+- Local Docker build is blocked by external Docker Hub/Colima metadata resolution for `docker/dockerfile:1`. The failure occurs before application Dockerfile stages, so it does not currently indicate a project-layer Docker regression.
 
 ## Remaining Risk
 
-- Production readiness still depends on environment-specific work: real VPS/cloud host, Kamal secrets, TLS/DNS, database backup policy, restore drill, alert routing, and load-test evidence from a deployed environment.
+- Production readiness still depends on environment-specific work: real VPS/cloud host, Kamal secrets, TLS/DNS, database backup policy, restore drill, alert routing, AWS account wiring, serverless secret rotation, and load-test evidence from a deployed environment.
 - The MVP intentionally keeps workflow execution synchronous/small-scale around the Rails monolith and Solid components. That is acceptable for the portfolio target, but high-volume fan-out would require measured queue partitioning and worker scaling before production rollout.

@@ -221,6 +221,7 @@ GitHub Actions runs the production-readiness checks on pull requests and pushes 
 - Brakeman
 - bundler-audit
 - Redocly OpenAPI linting
+- standalone serverless ingress normalizer and serverless IaC smoke checks
 - Docker image build
 
 Deployment is manual through the `Deploy` workflow. It uses Kamal and requires a protected `production` environment with these repository variables:
