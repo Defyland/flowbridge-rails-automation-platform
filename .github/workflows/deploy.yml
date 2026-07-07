@@ -24,7 +24,7 @@ jobs:
       CACHE_DATABASE_URL: ${{ secrets.CACHE_DATABASE_URL }}
       CABLE_DATABASE_URL: ${{ secrets.CABLE_DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ruby/setup-ruby@v1
         with:
