@@ -1,0 +1,9 @@
+provider_source               = "stripe"
+rails_ingress_url             = "https://flowbridge-production.example.com"
+serverless_ingress_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:flowbridge/serverless-ingress"
+
+environment = "staging"
+
+tags = {
+  Owner = "backend-challenges"
+}

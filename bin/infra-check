@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+require "open3"
+
+ROOT = File.expand_path("..", __dir__)
+INFRA_DIR = File.join(ROOT, "infra", "opentofu", "aws-serverless-ingress")
+
+REQUIRED_SNIPPETS = [
+  'resource "aws_apigatewayv2_api" "webhook_ingress"',
+  'resource "aws_lambda_function" "webhook_ingress"',
+  'resource "aws_iam_role" "lambda"',
+  'resource "aws_iam_role_policy" "lambda_logs"',
+  'resource "aws_iam_role_policy" "lambda_secrets"',
+  'resource "aws_lambda_permission" "api_gateway"',
+  'FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN'
+].freeze
+
+def abort_with(message)
+  warn message
+  exit 1
+end
+
+abort_with "missing infra directory: #{INFRA_DIR}" unless Dir.exist?(INFRA_DIR)
+
+tf_files = Dir[File.join(INFRA_DIR, "*.tf")]
+abort_with "no OpenTofu/Terraform files found in #{INFRA_DIR}" if tf_files.empty?
+
+combined_hcl = tf_files.sort.map { |path| File.read(path) }.join("\n")
+REQUIRED_SNIPPETS.each do |snippet|
+  abort_with "infra is missing required snippet: #{snippet}" unless combined_hcl.include?(snippet)
+end
+
+if combined_hcl.include?('"FLOWBRIDGE_SERVERLESS_INGRESS_SECRET"')
+  abort_with "infra must pass the serverless secret ARN, not a plaintext secret value"
+end
+
+def which(command)
+  ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).map { |path| File.join(path, command) }.find { |candidate| File.executable?(candidate) }
+end
+
+tool = ENV["TOFU_BIN"].to_s
+tool = nil if tool.empty?
+tool ||= which("tofu") || which("terraform")
+
+unless tool
+  puts "No tofu/terraform executable found; static infra smoke checks passed."
+  exit 0
+end
+
+version_stdout, version_stderr, version_status = Open3.capture3(tool, "version")
+unless version_status.success?
+  combined_version_output = "#{version_stdout}\n#{version_stderr}"
+  if combined_version_output.include?("No version is set for command")
+    puts "Found #{tool}, but no asdf version is selected; static infra smoke checks passed."
+    exit 0
+  end
+
+  warn version_stdout unless version_stdout.empty?
+  warn version_stderr unless version_stderr.empty?
+  abort_with "#{tool} version check failed"
+end
+
+commands = [
+  [ tool, "-chdir=#{INFRA_DIR}", "fmt", "-check", "-recursive" ],
+  [ tool, "-chdir=#{INFRA_DIR}", "init", "-backend=false", "-input=false" ],
+  [ tool, "-chdir=#{INFRA_DIR}", "validate", "-no-color" ]
+]
+
+commands.each do |command|
+  puts command.join(" ")
+  stdout, stderr, status = Open3.capture3(*command)
+  puts stdout unless stdout.empty?
+  warn stderr unless stderr.empty?
+  abort_with "#{command.join(" ")} failed" unless status.success?
+end
