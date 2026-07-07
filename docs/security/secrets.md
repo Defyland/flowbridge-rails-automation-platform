@@ -21,11 +21,14 @@
 | `CABLE_DATABASE_URL` | Solid Cable database connection. |
 | `KAMAL_REGISTRY_PASSWORD` | Container registry authentication. |
 | `KAMAL_SSH_PRIVATE_KEY` | SSH access for Kamal deploy. |
+| `FLOWBRIDGE_SERVERLESS_INGRESS_SECRET` | HMAC secret used by Rails to verify normalized serverless webhook envelopes. |
+| `FLOWBRIDGE_SERVERLESS_INGRESS_SECRET_ARN` | Secrets Manager ARN used by the Lambda normalizer to fetch the same HMAC secret without placing the value in Terraform state. |
 
 ## Product secrets
 
 - API keys are stored as digests and raw tokens are returned once.
 - Webhook secrets are encrypted per workflow version.
+- Serverless ingress uses a separate shared HMAC secret for Lambda-to-Rails envelopes; provider-facing secrets remain separate from this internal trust boundary.
 - Credentials are encrypted per organization.
 - Webhook signatures, authorization headers, cookies, credential-bearing headers, and sensitive URL query parameters are masked before being stored as webhook headers, node outputs, errors, audit metadata, or dead-letter evidence.
 
@@ -37,3 +40,4 @@
 - Do not put connector credentials in URLs. When an upstream requires query credentials, FlowBridge still masks common sensitive parameters in stored evidence, but headers plus encrypted credentials remain the preferred path.
 - Rotate database and registry credentials through environment configuration, not code changes.
 - Treat CI logs as observable by maintainers and avoid printing secret values.
+- Do not pass serverless ingress secret values as Terraform variables. Use Secrets Manager ARN wiring and rotate the secret through the cloud secret store plus the Rails deploy environment.

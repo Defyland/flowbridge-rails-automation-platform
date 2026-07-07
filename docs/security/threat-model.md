@@ -15,6 +15,7 @@
 - Credentials and webhook secrets are encrypted with `ActiveSupport::MessageEncryptor`.
 - Tenant resources are queried through `Current.organization`.
 - Webhooks require HMAC SHA-256 signatures.
+- Serverless webhook envelopes require a separate Lambda-to-Rails HMAC signature.
 - Webhook and execution idempotency are enforced by unique indexes.
 - Sensitive keys are masked in outputs, audit metadata, and stored webhook headers.
 - Rate limiting is enforced per API key per minute.
@@ -28,6 +29,7 @@
 | Stolen API key | token digest storage, revocation column, role-scoped permissions |
 | Cross-tenant read | tenant-scoped queries and request tests |
 | Webhook spoofing | per-version HMAC signatures |
+| Serverless edge spoofing | separate `X-FlowBridge-Serverless-Signature`, Secrets Manager-backed edge secret, and OpenAPI-documented internal envelope |
 | Webhook replay | idempotency key uniqueness |
 | Secret leakage in logs | recursive secret masking and encrypted storage |
 | SSRF through connector URL | egress policy blocks loopback, private, link-local, multicast, documentation, and metadata-service networks |
@@ -51,6 +53,22 @@ Controls:
 Residual risk:
 
 - source systems with weak signing practices still require source-specific adapters before production onboarding
+
+### Serverless edge spoofing
+
+Risk: an attacker bypasses API Gateway and posts a forged normalized envelope directly to Rails.
+
+Controls:
+
+- require `X-FlowBridge-Serverless-Signature` before parsing the envelope;
+- sign the exact raw envelope body with HMAC SHA-256;
+- keep the shared serverless secret separate from per-workflow provider webhook secrets;
+- load the Lambda-side secret from Secrets Manager ARN rather than a plaintext Terraform variable;
+- preserve source, external event id, raw-body SHA-256, and correlation id in the envelope for auditability.
+
+Residual risk:
+
+- a leaked shared serverless secret can target any trigger key exposed through the internal endpoint; production should pair this with network controls, secret rotation, and provider-specific signature verification at the Lambda boundary.
 
 ### Token leakage
 

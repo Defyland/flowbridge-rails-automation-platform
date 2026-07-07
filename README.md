@@ -12,6 +12,7 @@ Evidence map:
 - Domain: [docs/domain/glossary.md](docs/domain/glossary.md), [docs/domain/bounded-contexts.md](docs/domain/bounded-contexts.md), [docs/domain/aggregates.md](docs/domain/aggregates.md), [docs/domain/invariants.md](docs/domain/invariants.md), [docs/domain/state-machines.md](docs/domain/state-machines.md)
 - Architecture: [docs/architecture/overview.md](docs/architecture/overview.md), [docs/architecture/module-boundaries.md](docs/architecture/module-boundaries.md), [docs/architecture/sequence-diagrams.md](docs/architecture/sequence-diagrams.md), [docs/architecture/deployment-view.md](docs/architecture/deployment-view.md)
 - Operations and scale: [docs/scalability.md](docs/scalability.md), [docs/operational-cost.md](docs/operational-cost.md), [docs/runbooks/common-issues.md](docs/runbooks/common-issues.md)
+- Cloud/serverless/IaC: [infra/opentofu/aws-serverless-ingress](infra/opentofu/aws-serverless-ingress), [docs/adr/007-serverless-webhook-ingress-boundary.md](docs/adr/007-serverless-webhook-ingress-boundary.md), [docs/architecture/deployment-view.md](docs/architecture/deployment-view.md)
 - Observability and tests: [docs/observability.md](docs/observability.md), [docs/testing-strategy.md](docs/testing-strategy.md), [docs/spec-driven/verification-report.md](docs/spec-driven/verification-report.md)
 - Security: [docs/security/threat-model.md](docs/security/threat-model.md), [docs/security/authorization-matrix.md](docs/security/authorization-matrix.md), [docs/security/data-classification.md](docs/security/data-classification.md), [docs/security/secrets.md](docs/security/secrets.md), [docs/security/abuse-cases.md](docs/security/abuse-cases.md)
 
@@ -35,6 +36,7 @@ Webhook automation often fails in production because payloads are duplicated, wo
 - Immutable workflow versions with graph checksums and per-version webhook secrets.
 - Fail-fast workflow graph validation for node shape, HTTP connector config, and retry policy.
 - Signed webhook ingestion with idempotency keys and correlation ID propagation.
+- Optional AWS serverless webhook ingress that normalizes provider events before relaying a signed internal envelope to Rails.
 - Async workflow execution through Active Job with duplicate-attempt guards, stale-queue recovery, retry, exponential backoff, and dead-letter creation.
 - Node-level execution evidence including input, output, duration, error code, and attempt number.
 - Real outbound HTTP connector execution with bounded timeouts and secret-safe evidence.
@@ -49,10 +51,14 @@ FlowBridge is a modular Rails monolith. API controllers keep machine traffic und
 ```mermaid
 flowchart LR
   Client["API client"] --> API["Rails API"]
+  Provider["Webhook provider"] --> Edge["API Gateway + Lambda normalizer"]
+  Edge --> ServerlessIngress["Signed serverless envelope endpoint"]
   Webhook["Webhook source"] --> Ingress["Signed webhook ingress"]
   API --> DB[(PostgreSQL primary)]
+  ServerlessIngress --> DB
   Ingress --> DB
   Ingress --> Job["WorkflowExecutionJob"]
+  ServerlessIngress --> Job
   Job --> Runner["ExecutionRunner"]
   Runner --> Node["NodeExecutor"]
   Node --> DLQ["DeadLetter"]
@@ -80,7 +86,7 @@ See [docs/architecture/overview.md](docs/architecture/overview.md) and [docs/dia
 - OpenTelemetry instrumentation hooks
 - Prometheus text metrics
 - k6 benchmark scripts
-- Docker, Thruster, Kamal, Railway, and GitHub Actions
+- Docker, Thruster, Kamal, Railway, GitHub Actions, OpenTofu/Terraform, AWS API Gateway, Lambda, and Secrets Manager
 
 ## Domain model
 
@@ -99,11 +105,13 @@ See [docs/architecture/overview.md](docs/architecture/overview.md) and [docs/dia
 
 The OpenAPI contract is [openapi.yaml](openapi.yaml). It is guarded as an executable contract: repository compliance verifies every `/api/v1` route is documented, and integration tests validate real JSON responses against the documented 2xx/error schemas. Human-readable examples live in [docs/api/http-examples.md](docs/api/http-examples.md), and the standardized error format is documented in [docs/api/error-format.md](docs/api/error-format.md).
 
-All product endpoints are versioned under `/api/v1`. Webhook ingress uses `/api/v1/webhooks/{trigger_key}` with `X-FlowBridge-Signature` and `X-FlowBridge-Event-Id`.
+All product endpoints are versioned under `/api/v1`. Direct webhook ingress uses `/api/v1/webhooks/{trigger_key}` with `X-FlowBridge-Signature` and `X-FlowBridge-Event-Id`. Serverless edge ingress uses the internal `/api/v1/serverless/webhooks/{trigger_key}` contract with `X-FlowBridge-Serverless-Signature`; this path is produced by the Lambda normalizer and documented in OpenAPI to prevent drift.
 
 ## Async or event architecture
 
 Webhook ingestion persists the event and execution in one database transaction, then enqueues `WorkflowExecutionJob`. Because the primary application database and `solid_queue` can fail independently, a recurring recovery job re-enqueues stale `queued` executions if the enqueue step fails after commit. The worker still uses a running lease to reject duplicate active attempts. Retriable node failures schedule another job according to the version retry policy. Exhausted or non-retriable failures create a `DeadLetter` record. This is documented in [docs/architecture/data-consistency.md](docs/architecture/data-consistency.md) and [docs/architecture/workflow-engine.md](docs/architecture/workflow-engine.md), with event contracts in [docs/events/README.md](docs/events/README.md).
+
+The serverless ingress path is deliberately an edge adapter, not a second workflow engine. API Gateway and Lambda normalize provider payloads, compute raw-body evidence, fetch the shared HMAC secret from Secrets Manager, and relay a signed envelope to Rails. Rails still owns workflow lookup, idempotency, audit logging, persistence, and job enqueueing.
 
 ## Database design
 
@@ -123,6 +131,8 @@ Minitest covers:
 - metrics and rate limiting
 - repository spec compliance
 - OpenAPI route coverage and response-contract checks
+- standalone serverless ingress normalizer tests
+- OpenTofu/Terraform serverless ingress checks through `bin/infra-check`
 - operator login and dead-letter resolution through Capybara system tests
 
 Run tests with:
@@ -159,6 +169,7 @@ Key decisions are captured as ADRs:
 - [ADR 002: Immutable workflow versions](docs/adr/002-immutable-workflow-versions.md)
 - [ADR 003: Database-backed dead letters before external broker adoption](docs/adr/003-database-backed-dead-letters.md)
 - [ADR 004: Defer Event Sourcing for execution history](docs/adr/004-defer-event-sourcing-for-execution-history.md)
+- [ADR 007: Serverless webhook ingress boundary](docs/adr/007-serverless-webhook-ingress-boundary.md)
 
 The main trade-off is using Active Job and database state instead of RabbitMQ in this implementation slice. The design still models retry queues, idempotency, acknowledgement boundaries, and dead letters explicitly, while keeping the project runnable without external services.
 
@@ -229,6 +240,7 @@ And these repository secrets:
 - `QUEUE_DATABASE_URL`
 - `CACHE_DATABASE_URL`
 - `CABLE_DATABASE_URL`
+- `FLOWBRIDGE_SERVERLESS_INGRESS_SECRET` when the AWS edge path is enabled
 
 For public demo and reviewer evaluation, there is also a lighter Railway
 single-service path documented in [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) and

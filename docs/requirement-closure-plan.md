@@ -19,6 +19,10 @@
 | Performance baseline | `benchmarks/*.js`, `docs/benchmarks/methodology.md`, `benchmarks/baseline.md` |
 | CI automation | `.github/workflows/ci.yml` with PostgreSQL service |
 | Docker build | `Dockerfile`, CI docker job |
+| Serverless architecture | `services/serverless/webhook_ingress`, `app/controllers/api/v1/serverless_webhooks_controller.rb`, `docs/adr/007-serverless-webhook-ingress-boundary.md` |
+| Infrastructure as code | `infra/opentofu/aws-serverless-ingress`, `bin/infra-check` |
+| Cloud deployment/ops | `RAILWAY_DEPLOY.md`, `config/deploy.yml`, `docs/architecture/deployment-view.md`, `infra/opentofu/aws-serverless-ingress` |
+| Internal API documentation | `openapi.yaml` documents `/api/v1/serverless/webhooks/{trigger_key}` |
 
 ## Senior review checklist
 
@@ -28,3 +32,4 @@
 - Failure modes are explicit and operator actions are documented.
 - Security and tenant isolation are implemented, documented, and tested.
 - Performance scripts and budgets are present.
+- Serverless/IaC evidence is implemented, tested, and validated rather than described only in prose.

@@ -8,6 +8,7 @@ FlowBridge uses the Rails 8 default testing stack: Minitest, fixtures, integrati
 | --- | --- | --- |
 | Model tests | `test/models/*` | Validate local invariants such as tenant ownership, immutable versions, credential masking, and auth-related constraints. |
 | Service tests | `test/services/*` | Exercise workflow execution behavior, retry transitions, node evidence, and dead-letter creation. |
+| Standalone service tests | `services/serverless/webhook_ingress/test/*` | Exercise the Lambda normalizer without Rails or AWS network access. |
 | Job tests | `test/jobs/*` | Verify Active Job integration around workflow execution. |
 | Integration tests | `test/integration/*` | Cover API lifecycle, authorization, tenant isolation, webhook signatures, duplicate delivery, rate limits, metrics, failure scenarios, and OpenAPI response contracts against real JSON payloads. |
 | Controller tests | `test/controllers/*` | Cover Rails-auth session and password flows. |
@@ -35,6 +36,8 @@ When a test needs a one-off state, it can still create records inline. Shared ex
 - `bin/bundler-audit`
 - `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error`
 - OpenAPI YAML parsing
+- standalone serverless ingress normalizer tests
+- OpenTofu/Terraform serverless ingress validation through `bin/infra-check`
 - OpenAPI route coverage and response-contract tests
 - `bin/rails test:all`
 - `bin/rails test:system`
@@ -48,6 +51,7 @@ Additional release confidence checks used for the spec-driven pass:
 - route-to-OpenAPI drift checks for every `/api/v1` route
 - CI/deploy workflow YAML parsing
 - `docker build -t flowbridge:test .`
+- `ASDF_TERRAFORM_VERSION=1.9.8 bin/infra-check` for full local Terraform validation when the asdf Terraform plugin is available
 
 ## Coverage Expectation
 
@@ -63,10 +67,12 @@ Coverage is useful as a regression signal, not as a substitute for behavioral te
 - metrics endpoint behavior
 - required repository documentation and contracts
 - OpenAPI route coverage plus real response/schema drift
+- serverless envelope signature, idempotency, OpenAPI contract, Lambda normalization, and IaC topology smoke/validate
 
 ## What Is Intentionally Not Tested Yet
 
 - Third-party SaaS contract tests; HTTP connector behavior is real and covered through a local loopback server.
 - Production Kamal deployment against an actual VPS/cloud host.
+- AWS API Gateway/Lambda deployment against a real cloud account.
 - Browser coverage for every operator action; the current system test is a smoke-level console check.
 - Long-running k6 benchmark results; scripts and methodology exist, but stable p50/p95/p99 captures still need a long-lived app server run.

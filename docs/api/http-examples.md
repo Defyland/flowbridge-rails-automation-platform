@@ -59,6 +59,35 @@ curl -s "http://localhost:3000/api/v1/webhooks/$TRIGGER_KEY" \
   -d "$BODY"
 ```
 
+## Send serverless normalized webhook envelope
+
+The serverless edge signs a normalized envelope instead of the provider payload directly:
+
+```bash
+SOURCE_BODY='{"id":"evt-edge-123","email":"buyer@example.com"}'
+RAW_SHA="$(printf "%s" "$SOURCE_BODY" | openssl dgst -sha256 -binary | xxd -p -c 256)"
+ENVELOPE="$(jq -nc \
+  --arg sha "$RAW_SHA" \
+  --argjson payload "$SOURCE_BODY" \
+  '{
+    schema_version: 1,
+    source: "stripe",
+    external_event_id: "evt-edge-123",
+    received_at: "2026-07-07T15:20:00Z",
+    raw_body_sha256: $sha,
+    correlation_id: "corr-edge-123",
+    headers: { "stripe-signature": "t=1,v1=masked-by-rails" },
+    payload: $payload
+  }')"
+SERVERLESS_SIGNATURE="sha256=$(printf "%s" "$ENVELOPE" | openssl dgst -sha256 -hmac "$FLOWBRIDGE_SERVERLESS_INGRESS_SECRET" -binary | xxd -p -c 256)"
+
+curl -s "http://localhost:3000/api/v1/serverless/webhooks/$TRIGGER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-FlowBridge-Serverless-Signature: $SERVERLESS_SIGNATURE" \
+  -H "X-Correlation-Id: corr-edge-123" \
+  -d "$ENVELOPE"
+```
+
 ## Inspect execution
 
 ```bash

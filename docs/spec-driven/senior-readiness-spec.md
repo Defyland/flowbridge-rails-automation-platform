@@ -67,6 +67,8 @@ CI must cover lint, security, tests, OpenAPI validation, Docker build, and cover
 | Architecture boundaries are explicit | `docs/architecture/module-boundaries.md`, `docs/architecture/workflow-engine.md` | Done | Distinguishes API, operator, engine, observability, and infra. |
 | C4 and sequence views exist | `docs/architecture/c4-context.md`, `docs/architecture/c4-container.md`, `docs/architecture/sequence-diagrams.md` | Done | Text plus Mermaid diagrams. |
 | Deployment view exists | `docs/architecture/deployment-view.md`, `config/deploy.yml`, `.github/workflows/deploy.yml` | Done | Manual Kamal deploy is documented. |
+| Serverless edge boundary exists | `services/serverless/webhook_ingress`, `app/controllers/api/v1/serverless_webhooks_controller.rb`, `infra/opentofu/aws-serverless-ingress` | Done | API Gateway/Lambda normalizes provider traffic and Rails keeps idempotency/execution ownership. |
+| Infrastructure as code exists | `infra/opentofu/aws-serverless-ingress`, `bin/infra-check` | Done | Terraform provider lock and local validation gate are present. |
 | OpenAPI is present | `openapi.yaml` | Done | Redocly lint passes. |
 | API examples and error format exist | `docs/api/http-examples.md`, `docs/api/error-format.md` | Done | Includes webhook and failure examples. |
 | Consistency model is documented | `docs/architecture/data-consistency.md` | Done | Covers idempotency, transactions, rollback. |
@@ -91,6 +93,7 @@ CI must cover lint, security, tests, OpenAPI validation, Docker build, and cover
 | Duplicate execution attempts are guarded | `app/services/flow_bridge/execution_runner.rb`, `test/services/execution_runner_test.rb` | Done | Recent running executions are treated as active leases. |
 | Rate limits use atomic increments | `app/services/flow_bridge/rate_limiter.rb`, `test/integration/rate_limiting_and_metrics_test.rb` | Done | API key limit and public bootstrap limit share the limiter. |
 | Public bootstrap has abuse controls | `app/controllers/api/v1/organizations_controller.rb`, `openapi.yaml`, `test/integration/rate_limiting_and_metrics_test.rb` | Done | IP/hour cap and client-supplied plan/limit ignored. |
+| Internal serverless API is documented | `openapi.yaml`, `test/integration/openapi_response_contract_test.rb`, `test/integration/serverless_webhook_ingress_test.rb` | Done | `/api/v1/serverless/webhooks/{trigger_key}` has schema, response contract, signature, and idempotency tests. |
 
 ## Out of Scope
 
